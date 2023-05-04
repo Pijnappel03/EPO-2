@@ -135,6 +135,7 @@ begin
         when tx_mine =>
           DS_out_UART_in <= "01000000";
           write <= '1';
+          count_cross <= '0';
           tx_new <= tx_wait_ack_mine;
 
         when tx_cross =>
