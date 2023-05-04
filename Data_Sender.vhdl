@@ -73,7 +73,6 @@ architecture behavioral of Data_Sender is
   signal ack_rec : std_logic;
   signal tx_state, tx_new : transmitter_state;
   signal rx_state, rx_new : reciever_state;
-  signal count_cross : std_logic;
   signal count_ack : unsigned(12 downto 0); 
   signal data : std_logic_vector(7 downto 0);
 begin
@@ -113,16 +112,10 @@ begin
           end if;
 
         when tx_hold_cross =>
-          if (count_cross = '1') then
-            count_cross <= '0';
-            if(buffer_empty = '0') then
-              tx_new <= tx_cross;
-            else
-              tx_new <= tx_hold_cross;
-            end if;
-          else 
-            count_cross <= '1';
-            tx_new <= tx_idle;
+          if(buffer_empty = '0') then
+            tx_new <= tx_cross;
+          else
+            tx_new <= tx_hold_cross;
           end if;
 
         when tx_hold_ack =>
@@ -135,7 +128,6 @@ begin
         when tx_mine =>
           DS_out_UART_in <= "01000000";
           write <= '1';
-          count_cross <= '0';
           tx_new <= tx_wait_ack_mine;
 
         when tx_cross =>
