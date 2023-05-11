@@ -59,48 +59,49 @@ architecture structural of robot is
 
     component timebase is
         port(
-            clk                 : in std_logic;
-            reset               : in std_logic;
-            count_out           : out std_logic_vector(19 downto 0)
+            clk                     : in std_logic;
+            reset                   : in std_logic;
+            count_out               : out std_logic_vector(19 downto 0)
         );
     end component timebase;
 
     component eightbitregister is
-        port(   register_input       :in std_logic_vector(7 downto 0);
-            clk         :in std_logic;
+        port(   register_input      :in std_logic_vector(7 downto 0);
+            clk                     :in std_logic;
     
-            register_output      :out std_logic_vector(7 downto 0)
+            register_output         :out std_logic_vector(7 downto 0)
     );
     end component eightbitregister;
 
     component Data_sender is
         port (
-            clk : in std_logic;
-            reset : in std_logic;
+            clk             : in std_logic;
+            reset           : in std_logic;
         -- tx
-            DS_out_UART_in : out std_logic_vector(7 downto 0);
-            buffer_empty : in std_logic;
-            write : out std_logic;
+            DS_out_UART_in  : out std_logic_vector(7 downto 0);
+            buffer_empty    : in std_logic;
+            write           : out std_logic;
         -- rx
-            DS_in_UART_out : in std_logic_vector(7 downto 0);
-            data_ready : in std_logic;
-            read : out std_logic;
+            DS_in_UART_out  : in std_logic_vector(7 downto 0);
+            data_ready      : in std_logic;
+            read            : out std_logic;
         -- user in
-            DS_in_mine : in std_logic;
-            DS_in_mid : in std_logic;
-            DS_out : out std_logic_vector(7 downto 0)
+            DS_in_mine      : in std_logic;
+            DS_in_mid       : in std_logic;
+            DS_out          : out std_logic_vector(7 downto 0)
       );
     end component Data_sender;
 
     component Mine_detector is
         generic (
-            trig_count : integer := 2700 -- (50*10^6/trig_freq)/2
+            trig_count      : integer := 2700 -- (50*10^6/trig_freq)/2
             );
           port (
-            clk : in std_logic;
-            square_in : in std_logic;
-            sensors_out : in std_logic_vector(2 downto 0);
-            mine_out : out std_logic
+            clk             : in std_logic;
+            square_in       : in std_logic;
+            sensors_out     : in std_logic_vector(2 downto 0);
+            
+            mine_out        : out std_logic
           );
     end component Mine_detector;
 
