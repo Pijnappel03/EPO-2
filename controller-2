@@ -20,13 +20,13 @@ entity controller is
         ctr_mid             : out std_logic
 
   );
-end controller ;
+end controller;
 
 architecture behavioral of controller is
     type control_state is (start_midpoint, forward, crosspoint, s_left, s_right, reverse);
     signal state, new_state                                                                     : control_state;
     signal count_r, direction_ll, direction_rr, direction_l_resett, direction_r_resett          : std_logic;
-    signal count_point                                                                          : std_logic; -- Count signal
+    signal count_point                                                                          : integer; -- Count signal
     signal mid_s                                                                                : std_logic; -- Inter signal to ctr_mid
 
 begin
