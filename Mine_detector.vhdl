@@ -3,6 +3,9 @@ library ieee;
   use ieee.numeric_std.all;
 
 entity Mine_detector is
+  generic (
+	trig_count : integer := 2700 -- (50*10^6/trig_freq)/2
+	);
   port (
     clk : in std_logic;
     square_in : in std_logic;
@@ -20,15 +23,16 @@ begin
         if(rising_edge(clk)) then
             if(sensors_out = "000") then 
                 sig_out <= '0'; 
+					 count <= (others => '0');
             elsif (sig_out = '1') then 
                 sig_out <= '1';
             else
-                if (count >= 7500) then
+                if (count >= trig_count) then
                     sig_out <= '1';
                 elsif (square_in = '1') then
                     count <= count + 1;
                 elsif (square_in = '0') then
-                    count <= 0;
+                    count <= (others => '0');
                 end if;
             end if;
         end if;
