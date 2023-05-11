@@ -116,62 +116,62 @@ architecture structural of robot is
  
 begin
     CRT: controller port map(
-                                sensors_out     	=>  sensors_out,                           
-                                clk     		=>  clk,
-                                reset             	=>  reset,
-                                count_in     		=>  count,
-                                ctr_mine => mine_detect_ctr,
-                                ctr_data => data_out,
+                                sensors_out     	=> sensors_out,                           
+                                clk     		    => clk,
+                                reset             	=> reset,
+                                count_in     		=> count,
+                                ctr_mine            => mine_detect_ctr,
+                                ctr_data            => data_out,
 
-                                count_reset     	=>  reset_counter,
-                                direction_l     	=>  direction_ll,
-                                direction_l_reset       =>  direction_l_resett,
-                                direction_r     	=>  direction_rr,
-                                direction_r_reset     	=>  direction_r_resett,
-                                ctr_mine_out => mine_detect_ds,
-                                ctr_mid => ds_in_mid_s
+                                count_reset     	=> reset_counter,
+                                direction_l     	=> direction_ll,
+                                direction_l_reset   => direction_l_resett,
+                                direction_r     	=> direction_rr,
+                                direction_r_reset   => direction_r_resett,
+                                ctr_mine_out        => mine_detect_ds,
+                                ctr_mid             => ds_in_mid_s
     );
 
     REG: eightbitregister port map(
-                                register_input => data_in,
-                                register_output => data_out
+                                register_input      => data_in,
+                                register_output     => data_out
     );
 
     DS: data_sender port map(
-                                DS_in_mine => mine_detect_ds,
-                                DS_in_mid => Ds_in_mid_s,
-                                DS_out => Data_in
+                                DS_in_mine          => mine_detect_ds,
+                                DS_in_mid           => Ds_in_mid_s,
+                                DS_out              => Data_in
     );
 
     MD: Mine_detector port map (
-                                mine_out => mine_detect_ctr
+                                mine_out            => mine_detect_ctr
     );
 
     MCL: motorcontrol port map(
-                                reset           =>  direction_l_resett,
-                                direction       =>  direction_ll,
-                                count_in        =>  count,
-                                pwm             =>  motor_l_pwm
+                                reset               => direction_l_resett,
+                                direction           => direction_ll,
+                                count_in            => count,
+                                pwm                 => motor_l_pwm
     );
 
     MCR: motorcontrol port map(
-                                reset           =>  direction_r_resett,
-                                direction       =>  direction_rr,
-                                count_in        =>  count,
-                                pwm             =>  motor_r_pwm
+                                reset               => direction_r_resett,
+                                direction           => direction_rr,
+                                count_in            => count,
+                                pwm                 => motor_r_pwm
     );
 
     IB: inputbuffer port map(
-                                sensor_l_in     =>  sensor_l_in,
-                                sensor_m_in     =>  sensor_m_in,
-                                sensor_r_in     =>  sensor_r_in,
-                                clk             =>  clk,
-                                sensors_out     =>  sensors_out
+                                sensor_l_in         => sensor_l_in,
+                                sensor_m_in         => sensor_m_in,
+                                sensor_r_in         => sensor_r_in,
+                                clk                 => clk,
+                                sensors_out         => sensors_out
     );
 
     TB: timebase port map(
-                                clk             => clk,
-                                reset           => reset_counter,
-                                count_out       => count
+                                clk                 => clk,
+                                reset               => reset_counter,
+                                count_out           => count
     );
 end architecture structural;
