@@ -37,7 +37,7 @@ entity Data_Sender is
         read : out std_logic;
     -- user in
         DS_in_mine : in std_logic;
-        DS_in_cross : in std_logic;
+        DS_in_mid : in std_logic;
         DS_out : out std_logic_vector(7 downto 0)
   );
 end entity;
@@ -87,14 +87,14 @@ begin
   end process;
 
   -- tx state comb
-  process(tx_state, DS_in_cross, DS_in_mine, ack_send, reset)
+  process(tx_state, DS_in_mid, DS_in_mine, ack_send, reset)
   begin
     if (reset = '1') then
       tx_new <= tx_idle;
     else 
       case tx_state is
         when tx_idle =>
-          if(rising_edge(DS_in_cross)) then
+          if(rising_edge(DS_in_mid)) then
             tx_new <= tx_hold_cross;
           elsif(rising_edge(DS_in_mine)) then
             tx_new <= tx_hold_mine;     
@@ -193,9 +193,11 @@ begin
           else 
             rx_new <= rx_idle;
           end if;
+          read <= '0';
         when rx_read =>
           if (DS_in_UART_out = "00010000") then
             ack_rec <= '1';
+            read <= '1';
             rx_new <= rx_idle;
           else
             rx_new <= rx_toBuff;
