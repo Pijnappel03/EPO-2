@@ -93,10 +93,10 @@ architecture structural of robot is
 
     component inputbuffer is
         port(
+            clk                 : in std_logic;
             sensor_l_in         : in std_logic;
             sensor_m_in         : in std_logic; 
             sensor_r_in         : in std_logic;
-            clk                 : in std_logic;
             sensors_out         : out std_logic_vector(2 downto 0)
         );
     end component inputbuffer;
@@ -208,10 +208,10 @@ begin
     );
 
     IB: inputbuffer port map(
+                                clk                 => clk,
                                 sensor_l_in         => sensor_l_in,
                                 sensor_m_in         => sensor_m_in,
                                 sensor_r_in         => sensor_r_in,
-                                clk                 => clk,
 
                                 sensors_out         => sensors_out
     );
@@ -219,7 +219,7 @@ begin
     TB: timebase port map(
                                 clk                 => clk,
                                 reset               => reset_counter,
-                                
+
                                 count_out           => count
     );
 
