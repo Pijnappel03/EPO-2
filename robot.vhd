@@ -128,14 +128,14 @@ architecture structural of robot is
     end component uart;
 
     signal direction_ll, direction_l_resett, direction_rr, direction_r_resett       : std_logic;
-    signal count                                                                    : std_logic_vector(19 downto 0);
+    signal count                                                                    : std_logic_vector (19 downto 0);
     signal reset_counter                                                            : std_logic;                         
     --Internal reset for counter and such
-    signal sensors_out                                                              : std_logic_vector(2 downto 0);
+    signal sensors_out                                                              : std_logic_vector (2 downto 0);
     signal mine_detect_ctr, mine_detect_ds                                          : std_logic; 
-    signal data_in, data_out                                                        : std_logic;
+    signal data_in, data_out                                                        : std_logic_vector (7 downto 0); 
     signal ds_in_mid_s, read_s, data_ready_s, buffer_empty_s, write_s               : std_logic;
-    signal ds_out_uart_in_s, DS_in_UART_out_s                                       : std_logic_vector(7 downto 0); 
+    signal ds_out_uart_in_s, DS_in_UART_out_s                                       : std_logic_vector (7 downto 0); 
 
  
 begin
