@@ -15,7 +15,7 @@ entity robot is
         motor_r_pwm     : out std_logic;       
         
         mine_square_in  : in std_logic;
-        ro_rx              : out std_logic; 
+        ro_rx              : in std_logic; 
         ro_tx              : out std_logic
     );
 end entity robot;
@@ -140,7 +140,6 @@ architecture structural of robot is
  
 begin
     -- external signal handling
-        reset_counter <= reset;
 
     CRT: controller port map(
                                 sensors_out     	=> sensors_out,                           
@@ -168,7 +167,7 @@ begin
 
     DS: data_sender port map(      
                                 clk                 => clk,
-                                reset               => reset_counter,
+                                reset               => reset,
                             -- tx          =>
                                 DS_out_UART_in      =>  ds_out_uart_in_s,
                                 buffer_empty        =>  buffer_empty_s,
@@ -225,7 +224,7 @@ begin
 
     ua : UART port map(
                                 clk                 => clk,
-                                reset               => reset_counter,
+                                reset               => reset,
 
                                 rx                  =>  ro_rx,
                                 tx                  =>  ro_tx,
