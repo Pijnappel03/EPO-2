@@ -43,8 +43,7 @@ begin
     begin
         if (rising_edge (clk)) then
             if (reset = '1') then
-                state <= start_midpoint;
-                count_point <= 1; 
+                state <= start_midpoint; 
             else
                 state <= new_state;
             end if;
@@ -63,6 +62,7 @@ begin
                 direction_rr   <= '0';
                 mid_s <= '1'; 
                 mine_s <= '0';
+					 count_point <= 1;
                 if (ctr_mine = '1') then 
                     new_state<= reverse;
                     mine_s <= '1';
