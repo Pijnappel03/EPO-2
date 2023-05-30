@@ -94,9 +94,10 @@ begin
     else 
       case tx_state is
         when tx_idle =>
-          if(rising_edge(DS_in_mid)) then
+			 ack_rec <= '0';
+          if(DS_in_mid = '1') then
             tx_new <= tx_hold_cross;
-          elsif(rising_edge(DS_in_mine)) then
+          elsif(DS_in_mine = '1') then
             tx_new <= tx_hold_mine;     
           elsif(ack_send = '1') then
             tx_new <= tx_hold_ack;
@@ -143,33 +144,36 @@ begin
 
         when tx_wait_ack_mine =>
           write <= '0';
-          if(count_ack = 4000)then
-            tx_new <= tx_wait_ack_mine;
-            count_ack <= count_ack + 1;
-          elsif (count_ack = 4000) then
-            tx_new <= tx_hold_mine;
-          else
-            count_ack <= "0";
-            tx_new <= tx_wait_ack_mine;
-          end if;
-
+          --if(count_ack = 4000)then
+          --  tx_new <= tx_wait_ack_mine;
+          --  count_ack <= count_ack + 1;
+          --elsif (count_ack = 4000) then
+          --  tx_new <= tx_hold_mine;
+          --else
+          --  count_ack <= (others => '0');
+          --  tx_new <= tx_wait_ack_mine;
+          --end if;
+			
+			tx_new <= tx_idle;
+			
         when tx_wait_ack_cross =>
           write <= '0';
-          if(count_ack = 4000)then
-            if(ack_rec = '1') then
-              count_ack <= "0";
-              ack_rec <= '0';
-              tx_new <= tx_idle;
-            else
-              tx_new <= tx_wait_ack_cross;
-              count_ack <= count_ack + 1;
-            end if;
-          elsif (count_ack = 4000) then
-            tx_new <= tx_hold_cross;
-          else
-            count_ack <= "0";
-            tx_new <= tx_wait_ack_cross;
-          end if;
+          --if(count_ack = 4000)then
+          --  if(ack_rec = '1') then
+          --    count_ack <= (others => '0');
+          --    tx_new <= tx_idle;
+          --  else
+          --    tx_new <= tx_wait_ack_cross;
+          --    count_ack <= count_ack + 1;
+          --  end if;
+          --elsif (count_ack = 4000) then
+          --  tx_new <= tx_hold_cross;
+          --else
+          --  count_ack <= (others => '0');
+          --  tx_new <= tx_wait_ack_cross;
+          --end if;
+		  
+		  tx_new <= tx_idle;
 
           when others =>
             tx_new <= tx_idle;
@@ -196,7 +200,7 @@ begin
           read <= '0';
         when rx_read =>
           if (DS_in_UART_out = "00010000") then
-            ack_rec <= '1';
+            --ack_rec <= '1';
             read <= '1';
             rx_new <= rx_idle;
           else
