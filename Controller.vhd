@@ -23,7 +23,7 @@ entity controller is
 end controller;
 
 architecture behavioral of controller is
-    type control_state is (start_midpoint, forward, crosspoint, s_left, s_right, reverse);
+    type control_state is (start_midpoint, forward, crosspoint, s_left, s_right, reverse, stop);
     signal state, new_state                                                                     : control_state;
     signal count_r, direction_ll, direction_rr, direction_l_resett, direction_r_resett          : std_logic;
     signal count_point                                                                          : integer; -- Count signal
@@ -43,7 +43,8 @@ begin
     begin
         if (rising_edge (clk)) then
             if (reset = '1') then
-                state <= start_midpoint; 
+                state <= stop;
+                count_point <= 1; 
             else
                 state <= new_state;
             end if;
@@ -54,6 +55,18 @@ begin
     begin
         case state is
 
+            when stop => 
+                count_r <= '0';
+                direction_l_resett <= '1';
+                direction_r_resett <= '1';
+                direction_ll   <= '0';
+                direction_rr   <= '0';
+                mid_s <= '0';
+                mine_s <= '0';
+                if (sensors_out="000") then
+                    new_state <= start_midpoint;
+                end if;
+
             when start_midpoint => 
                 count_r       <= '0'; 
                 direction_l_resett <= '0';
@@ -62,7 +75,6 @@ begin
                 direction_rr   <= '0';
                 mid_s <= '1'; 
                 mine_s <= '0';
-					 count_point <= 1;
                 if (ctr_mine = '1') then 
                     new_state<= reverse;
                     mine_s <= '1';
@@ -104,7 +116,8 @@ begin
                     new_state <= s_right;
             elsif (ctr_data = "01000000") then
                     new_state <= s_left;
-            elsif (ctr_data = "00000000") then 
+            elsif (ctr_data = "00000000") then
+                    new_state <= stop;  
             end if;
 
             when s_left =>
