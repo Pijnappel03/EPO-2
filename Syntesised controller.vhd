@@ -25,6 +25,7 @@ end controller;
 architecture behavioral of controller is
   type ctrl_states is (
     reset_state,
+	 tostart,
     start,
     cross,
     ctrl_left,
@@ -83,13 +84,24 @@ begin
                 else
                     
                 end if;
-            when start =>
+				when tostart =>
                 count_reset       <= '0';
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l       <= '1';
                 direction_r       <= '0';
                 ctr_mid           <= '1';
+                ctr_mine_out      <= '0';
+                lf_new_state      <= start;
+					 
+                    ctrl_new_state <= start;
+            when start =>
+                count_reset       <= '0';
+                direction_l_reset <= '0';
+                direction_r_reset <= '0';
+                direction_l       <= '1';
+                direction_r       <= '0';
+                ctr_mid           <= '0';
                 ctr_mine_out      <= '0';
                 lf_new_state      <= start;
 
