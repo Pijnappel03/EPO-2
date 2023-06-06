@@ -86,6 +86,8 @@ begin
     else 
       case tx_state is
         when tx_idle =>
+          write <= '0';
+          DS_out_UART_in <= "00000001";
           if(DS_in_mid = '1') then
             tx_new <= tx_hold_cross;
           elsif(DS_in_mine = '1') then
@@ -95,6 +97,7 @@ begin
           end if;
 
         when tx_hold_mine =>
+          DS_out_UART_in <= "00000001";
           if(buffer_empty = '0') then
             tx_new <= tx_mine;
           else
@@ -102,6 +105,7 @@ begin
           end if;
 
         when tx_hold_cross =>
+          DS_out_UART_in <= "00000001";
           if(buffer_empty = '0') then
             tx_new <= tx_cross;
           else
