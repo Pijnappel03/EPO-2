@@ -55,12 +55,8 @@ architecture behavioral of Data_Sender is
     tx_idle,
     tx_hold_mine,
     tx_hold_cross,
-    tx_hold_ack,
     tx_mine,
-    tx_cross,
-    tx_ack,
-    tx_wait_ack_mine,
-    tx_wait_ack_cross
+    tx_cross
   );
 
   type reciever_state is (
@@ -69,11 +65,8 @@ architecture behavioral of Data_Sender is
     rx_toBuff
   );
 
-  signal ack_send : std_logic;
-  signal ack_rec : std_logic;
   signal tx_state, tx_new : transmitter_state;
   signal rx_state, rx_new : reciever_state;
-  signal count_ack : unsigned(12 downto 0); 
   signal data : std_logic_vector(7 downto 0);
 begin
 
@@ -87,20 +80,17 @@ begin
   end process;
 
   -- tx state comb
-  process(tx_state, DS_in_mid, DS_in_mine, ack_send, reset)
+  process(tx_state, DS_in_mid, DS_in_mine, reset)
   begin
     if (reset = '1') then
       tx_new <= tx_idle;
     else 
       case tx_state is
         when tx_idle =>
-			 ack_rec <= '0';
           if(DS_in_mid = '1') then
             tx_new <= tx_hold_cross;
           elsif(DS_in_mine = '1') then
             tx_new <= tx_hold_mine;     
-          elsif(ack_send = '1') then
-            tx_new <= tx_hold_ack;
           else
             tx_new <= tx_idle;
           end if;
@@ -119,61 +109,15 @@ begin
             tx_new <= tx_hold_cross;
           end if;
 
-        when tx_hold_ack =>
-          if(buffer_empty = '0') then
-            tx_new <= tx_ack;
-          else
-            tx_new <= tx_hold_ack;
-          end if;
-
         when tx_mine =>
           DS_out_UART_in <= "01000000";
           write <= '1';
-          tx_new <= tx_wait_ack_mine;
+          tx_new <= tx_idle;
 
         when tx_cross =>
           DS_out_UART_in <= "10000000";
           write <= '1';
-          tx_new <= tx_wait_ack_cross;
-
-        when tx_ack =>
-          DS_out_UART_in <= "00010000";
-          write <= '1';
           tx_new <= tx_idle;
-          ack_send <= '0';
-
-        when tx_wait_ack_mine =>
-          write <= '0';
-          --if(count_ack = 4000)then
-          --  tx_new <= tx_wait_ack_mine;
-          --  count_ack <= count_ack + 1;
-          --elsif (count_ack = 4000) then
-          --  tx_new <= tx_hold_mine;
-          --else
-          --  count_ack <= (others => '0');
-          --  tx_new <= tx_wait_ack_mine;
-          --end if;
-			
-			tx_new <= tx_idle;
-			
-        when tx_wait_ack_cross =>
-          write <= '0';
-          --if(count_ack = 4000)then
-          --  if(ack_rec = '1') then
-          --    count_ack <= (others => '0');
-          --    tx_new <= tx_idle;
-          --  else
-          --    tx_new <= tx_wait_ack_cross;
-          --    count_ack <= count_ack + 1;
-          --  end if;
-          --elsif (count_ack = 4000) then
-          --  tx_new <= tx_hold_cross;
-          --else
-          --  count_ack <= (others => '0');
-          --  tx_new <= tx_wait_ack_cross;
-          --end if;
-		  
-		  tx_new <= tx_idle;
 
           when others =>
             tx_new <= tx_idle;
@@ -193,19 +137,11 @@ begin
       case rx_state is
         when rx_idle =>
           if (data_ready = '1') then
-            rx_new <= rx_read;
+            rx_new <= rx_toBuff;
           else 
             rx_new <= rx_idle;
           end if;
           read <= '0';
-        when rx_read =>
-          if (DS_in_UART_out = "00010000") then
-            --ack_rec <= '1';
-            read <= '1';
-            rx_new <= rx_idle;
-          else
-            rx_new <= rx_toBuff;
-          end if;
         when rx_toBuff =>
           data <= DS_in_UART_out;
           read <= '1';

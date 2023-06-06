@@ -2,7 +2,7 @@ library IEEE;
 USE IEEE.std_logic_1164.ALL;
 use IEEE.numeric_std.all;
 
-entity controller is
+entity old_ctrl is
   port (
         sensors_out	        : in std_logic_vector (2 downto 0); 
 	    clk	                : in std_logic;
@@ -20,9 +20,9 @@ entity controller is
         ctr_mid             : out std_logic
 
   );
-end controller;
+end old_ctrl;
 
-architecture behavioral of controller is
+architecture behavioral of old_ctrl is
     type control_state is (start_midpoint, forward, crosspoint, s_left, s_right, reverse, stop);
     signal state, new_state                                                                     : control_state;
     signal count_r, direction_ll, direction_rr, direction_l_resett, direction_r_resett          : std_logic;
