@@ -79,14 +79,14 @@ begin
   end process;
 
   -- tx state comb
-  process(tx_state, DS_in_mid, DS_in_mine, reset)
+  process(tx_state, DS_in_mid, DS_in_mine, reset, buffer_empty)
   begin
     if (reset = '1') then
       tx_new <= tx_idle;
     else 
       case tx_state is
         when tx_idle =>
-          write <= '0';
+			write <= '0';
           DS_out_UART_in <= "00000001";
           if(DS_in_mid = '1') then
             tx_new <= tx_hold_cross;
@@ -115,14 +115,16 @@ begin
         when tx_mine =>
           DS_out_UART_in <= "00100000";
           write <= '1';
-          tx_new <= tx_idle;
+			 tx_new <= tx_idle;
 
         when tx_cross =>
           DS_out_UART_in <= "01000000";
           write <= '1';
           tx_new <= tx_idle;
-
+			
           when others =>
+			 DS_out_UART_in <= "01000000";
+			 write <= '0';
             tx_new <= tx_idle;
 
       end case;
@@ -132,12 +134,13 @@ begin
 
   -- RX combinatorial
 
-  process(rx_state, data_ready)
+  process(rx_state, data_ready, reset, DS_in_UART_out)
   begin
     if (reset = '1') then
       rx_new <= rx_idle;
     else 
       case rx_state is
+		
         when rx_idle =>
           if (data_ready = '1') then
             rx_new <= rx_toBuff;
@@ -145,8 +148,11 @@ begin
             rx_new <= rx_idle;
           end if;
           read <= '0';
+			 data <= data;
+			 
         when rx_toBuff =>
           data <= DS_in_UART_out;
+			 rx_new <= rx_idle;
           read <= '1';
       end case;
     end if;
