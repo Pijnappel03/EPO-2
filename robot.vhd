@@ -16,7 +16,9 @@ entity robot is
         
         mine_square_in  : in std_logic;
         ro_rx              : in std_logic; 
-        ro_tx              : out std_logic
+        ro_tx              : out std_logic;
+		  
+		  DEB_led : out std_logic_vector(6 downto 0)
     );
 end entity robot;
 
@@ -36,7 +38,10 @@ architecture structural of robot is
             direction_r         : out std_logic;
             direction_r_reset   : out std_logic;
             ctr_mine_out        : out std_logic;
-            ctr_mid             : out std_logic
+            ctr_mid             : out std_logic;
+				
+				DEB_led : out std_logic_vector(4 downto 0);
+				  led_DEB :out std_logic_vector(1 downto 0)
     
       );
     end component controller;
@@ -155,7 +160,16 @@ begin
                                 direction_r     	=> direction_rr,
                                 direction_r_reset   => direction_r_resett,
                                 ctr_mine_out        => mine_detect_ds,
-                                ctr_mid             => ds_in_mid_s
+                                ctr_mid             => ds_in_mid_s,
+										  
+										  DEB_led(0) => DEB_led(0),
+										  DEB_led(1) => DEB_led(1),
+										  DEB_led(2) => DEB_led(2),
+										  DEB_led(3) => DEB_led(3),
+										  DEB_led(4) => DEB_led(4),
+										  led_DEB(0) => DEB_led(5),
+										  led_DEB(1) =>DEB_led(6)
+										  
     );
 
     REG: eightbitregister port map(
