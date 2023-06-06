@@ -61,7 +61,6 @@ architecture behavioral of Data_Sender is
 
   type reciever_state is (
     rx_idle,
-    rx_read,
     rx_toBuff
   );
 
@@ -110,12 +109,12 @@ begin
           end if;
 
         when tx_mine =>
-          DS_out_UART_in <= "01000000";
+          DS_out_UART_in <= "00100000";
           write <= '1';
           tx_new <= tx_idle;
 
         when tx_cross =>
-          DS_out_UART_in <= "10000000";
+          DS_out_UART_in <= "01000000";
           write <= '1';
           tx_new <= tx_idle;
 
