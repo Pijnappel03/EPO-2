@@ -205,7 +205,7 @@ begin
                 ctr_mid <= '0';
                 ctr_mine_out <= '0';
 					  
-					 lf_new_state      <= start;
+			    lf_new_state      <= start;
 
                 if (sensors_out = "011" or sensors_out = "001")  then
                     ctrl_new_state <= turn_around_3;
