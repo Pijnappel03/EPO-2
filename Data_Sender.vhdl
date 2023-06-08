@@ -122,6 +122,7 @@ begin
       when tx_mine =>
         DS_out_UART_in <= "00100000";
 
+        --Write timer needs to be tuned
         if (unsigned(ds_time) >= 8000) then
           DSR <= '0';
           DS_write <= '0';

@@ -4,6 +4,7 @@ library ieee;
 
 entity Mine_detector is
   generic (
+    -- NEEDS TUNING
 	trig_count : integer := 10 -- (50*10^6/trig_freq)/2
 	);
   port (
