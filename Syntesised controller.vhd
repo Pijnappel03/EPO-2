@@ -231,7 +231,7 @@ begin
                     ctrl_new_state <= turn_around_3;
                 end if;
 
-				when stupidstate1 =>
+			when stupidstate1 =>
 							DEB_led <= "11111";
                      lf_new_state<= start;
 							ctr_mid <= '1';
@@ -394,7 +394,7 @@ begin
                      direction_r   <= '0';
 										  
 							if (stupidcount >= 75000000) then 
-								ctrl_new_state <= LineFollow1;
+								ctrl_new_state <= LineFolllow2;
 								stupidcount := 0;
 							else
 								ctrl_new_state <= stupidstate1;
