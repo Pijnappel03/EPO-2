@@ -397,7 +397,7 @@ begin
 								ctrl_new_state <= LineFolllow2;
 								stupidcount := 0;
 							else
-								ctrl_new_state <= stupidstate1;
+								ctrl_new_state <= stupidstate2;
 								stupidcount := stupidcount + 1;
 							end if;				
 							        
