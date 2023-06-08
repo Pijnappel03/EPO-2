@@ -31,6 +31,9 @@ architecture structural of robot is
             count_in    	    : in std_logic_vector (19 downto 0);
             ctr_mine            : in std_logic;
             ctr_data            : in std_logic_vector (7 downto 0);
+
+            int_count_ctrl      : in std_logic_vector (31 downto 0);
+            int_reset_ctrl      : out std_logic;
             
             count_reset         : out std_logic;
             direction_l	        : out std_logic;	
@@ -62,15 +65,18 @@ architecture structural of robot is
         -- tx
             DS_out_UART_in  : out std_logic_vector(7 downto 0);
             buffer_empty    : in std_logic;
-            write           : out std_logic;
+            DS_write           : out std_logic;
         -- rx
             DS_in_UART_out  : in std_logic_vector(7 downto 0);
             data_ready      : in std_logic;
-            read            : out std_logic;
+            DS_read            : out std_logic;
         -- user in
             DS_in_mine      : in std_logic;
             DS_in_mid       : in std_logic;
-            DS_out          : out std_logic_vector(7 downto 0)
+            DS_out          : out std_logic_vector(7 downto 0);
+
+            DSR: out std_logic;
+            ds_time: in std_logic_vector(12 downto 0)
       );
     end component Data_sender;
 
@@ -114,6 +120,20 @@ architecture structural of robot is
         );
     end component timebase;
 
+    component IntegerOfTime is
+        port (clk                   : in std_logic;
+              reset                 : in std_logic;
+              int_count_out         : out std_logic_vector(31 downto 0)
+        );
+        end component IntegerOfTime;
+    
+    component DSTime is
+        port (clk: in std_logic;
+                reset: in std_logic;
+                ds_count_out: out std_logic_vector(12 downto 0)
+        );
+        end component DSTime;
+
     component uart is
         port (
             clk             : in  std_logic;
@@ -134,7 +154,9 @@ architecture structural of robot is
 
     signal direction_ll, direction_l_resett, direction_rr, direction_r_resett       : std_logic;
     signal count                                                                    : std_logic_vector (19 downto 0);
-    signal reset_counter                                                            : std_logic;                         
+    signal int_count                                                                : std_logic_vector (31 downto 0);
+    signal ds_count_s                                                               : std_logic_vector (12 downto 0);
+    signal reset_counter, Int_Count_reset, DSR                                      : std_logic;                         
     --Internal reset for counter and such
     signal sensors_out                                                              : std_logic_vector (2 downto 0);
     signal mine_detect_ctr, mine_detect_ds                                          : std_logic; 
@@ -153,6 +175,9 @@ begin
                                 count_in     		=> count,
                                 ctr_mine            => mine_detect_ctr,
                                 ctr_data            => data_out,
+
+                                int_count_ctrl => int_count,
+                                int_reset_ctrl => Int_Count_reset,
 
                                 count_reset     	=> reset_counter,
                                 direction_l     	=> direction_ll,
@@ -185,15 +210,19 @@ begin
                             -- tx          =>
                                 DS_out_UART_in      =>  ds_out_uart_in_s,
                                 buffer_empty        =>  buffer_empty_s,
-                                write               =>  write_s,
+                                DS_write               =>  write_s,
                             -- rx      =>
                                 DS_in_UART_out      =>  DS_in_UART_out_s,   
                                 data_ready          =>  data_ready_s,
-                                read                =>  read_s,
+                                DS_read                =>  read_s,
                             -- user in     =>
                                 DS_in_mine          =>  mine_detect_ds,
                                 DS_in_mid           =>  ds_in_mid_s,
-                                DS_out              =>  data_in
+                                DS_out              =>  data_in,
+                                
+                                DSR => DSR,
+                                ds_time => ds_count_s
+                            
     );    
 
     MD: Mine_detector port map (
@@ -234,6 +263,18 @@ begin
                                 reset               => reset_counter,
 
                                 count_out           => count
+    );
+
+    ITB: IntegerOfTime port map (
+                  clk                   => clk,
+                  reset                 => Int_Count_reset,
+                  int_count_out         => int_count
+    );
+
+    DST: DSTime port map (
+        clk => clk,
+        reset => DSR,
+        ds_count_out => ds_count_s
     );
 
     ua : UART port map(

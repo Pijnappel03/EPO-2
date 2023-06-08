@@ -1,55 +1,54 @@
 library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity out_buff is
   port (
-		regin : in    std_logic_vector(7 downto 0);
-		regout : out    std_logic_vector(7 downto 0)
+    regin : in std_logic_vector(7 downto 0);
+    regout : out std_logic_vector(7 downto 0)
   );
 end entity;
 
 architecture Behavioral of out_buff is
-  
+
 begin
-  process(regin)
+  process (regin)
   begin
     regout <= regin;
   end process;
 end architecture;
-
-
 library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity Data_Sender is
   port (
-        clk : in std_logic;
-        reset : in std_logic;
+    clk : in std_logic;
+    reset : in std_logic;
     -- tx
-        DS_out_UART_in : out std_logic_vector(7 downto 0);
-        buffer_empty : in std_logic;
-        write : out std_logic;
+    DS_out_UART_in : out std_logic_vector(7 downto 0);
+    buffer_empty : in std_logic;
+    DS_write : out std_logic;
     -- rx
-        DS_in_UART_out : in std_logic_vector(7 downto 0);
-        data_ready : in std_logic;
-        read : out std_logic;
+    DS_in_UART_out : in std_logic_vector(7 downto 0);
+    data_ready : in std_logic;
+    DS_read : out std_logic;
     -- user in
-        DS_in_mine : in std_logic;
-        DS_in_mid : in std_logic;
-        DS_out : out std_logic_vector(7 downto 0)
+    DS_in_mine : in std_logic;
+    DS_in_mid : in std_logic;
+    DS_out : out std_logic_vector(7 downto 0);
+
+    DSR : out std_logic;
+    ds_time : in std_logic_vector(12 downto 0)
   );
 end entity;
-
-
 architecture behavioral of Data_Sender is
-    component out_buff is
-		port (
-			regin : in    std_logic_vector(7 downto 0);
-		  regout : out    std_logic_vector(7 downto 0)
-		);
-	end component;
+  component out_buff is
+    port (
+      regin : in std_logic_vector(7 downto 0);
+      regout : out std_logic_vector(7 downto 0)
+    );
+  end component;
 
   type transmitter_state is (
     tx_idle,
@@ -70,93 +69,111 @@ architecture behavioral of Data_Sender is
 begin
 
   -- assign states (clk process)
-  process(clk)
+  process (clk)
   begin
-    if(rising_edge(clk)) then
-      tx_state <= tx_new;
-      rx_state <= rx_new;
+
+    if (rising_edge(clk)) then
+      if (reset = '1') then
+        tx_state <= tx_idle;
+        rx_state <= rx_idle;
+      else
+        tx_state <= tx_new;
+        rx_state <= rx_new;
+      end if;
     end if;
   end process;
 
   -- tx state comb
-  process(tx_state, DS_in_mid, DS_in_mine, reset, buffer_empty)
+  process (tx_state, DS_in_mid, DS_in_mine, reset, buffer_empty)
   begin
-    if (reset = '1') then
-      tx_new <= tx_idle;
-    else 
-      case tx_state is
-        when tx_idle =>
-			write <= '0';
-          DS_out_UART_in <= "00000001";
-          if(DS_in_mid = '1') then
-            tx_new <= tx_hold_cross;
-          elsif(DS_in_mine = '1') then
-            tx_new <= tx_hold_mine;     
-          else
-            tx_new <= tx_idle;
-          end if;
-
-        when tx_hold_mine =>
-          DS_out_UART_in <= "00000001";
-          if(buffer_empty = '0') then
-            tx_new <= tx_mine;
-          else
-            tx_new <= tx_hold_mine;
-          end if;
-
-        when tx_hold_cross =>
-          DS_out_UART_in <= "00000001";
-          if(buffer_empty = '0') then
-            tx_new <= tx_cross;
-          else
-            tx_new <= tx_hold_cross;
-          end if;
-
-        when tx_mine =>
-          DS_out_UART_in <= "00100000";
-          write <= '1';
-			 tx_new <= tx_idle;
-
-        when tx_cross =>
-          DS_out_UART_in <= "01000000";
-          write <= '1';
+    case tx_state is
+      when tx_idle =>
+        DS_write <= '0';
+        DS_out_UART_in <= "00000000";
+        DSR <= '1';
+        if (DS_in_mid = '1') then
+          tx_new <= tx_hold_cross;
+        elsif (DS_in_mine = '1') then
+          tx_new <= tx_hold_mine;
+        else
           tx_new <= tx_idle;
-			
-          when others =>
-			 DS_out_UART_in <= "01000000";
-			 write <= '0';
-            tx_new <= tx_idle;
+        end if;
 
-      end case;
-    end if;
+      when tx_hold_mine =>
+        DS_out_UART_in <= "00000001";
+        DS_write <= '0';
+        DSR <= '1';
+        if (buffer_empty = '0') then
+          tx_new <= tx_mine;
+        else
+          tx_new <= tx_hold_mine;
+        end if;
+
+      when tx_hold_cross =>
+        DS_out_UART_in <= "00000001";
+        DS_write <= '0';
+        DSR <= '1';
+        if (buffer_empty = '0') then
+          tx_new <= tx_cross;
+        else
+          tx_new <= tx_hold_cross;
+        end if;
+
+      when tx_mine =>
+        DS_out_UART_in <= "00100000";
+
+        if (unsigned(ds_time) >= 8000) then
+          DSR <= '0';
+          DS_write <= '0';
+          tx_new <= tx_mine;
+        else
+          DSR <= '1';
+          DS_write <= '1';
+          tx_new <= tx_idle;
+        end if;
+
+      when tx_cross =>
+        DS_out_UART_in <= "01000000";
+
+        if (unsigned(ds_time) >= 8000) then
+          DSR <= '0';
+          DS_write <= '1';
+          tx_new <= tx_mine;
+        else
+          DSR <= '1';
+          DS_write <= '1';
+          tx_new <= tx_idle;
+        end if;
+
+      when others =>
+        DS_out_UART_in <= "00000010";
+        DS_write <= '0';
+        tx_new <= tx_idle;
+
+    end case;
 
   end process;
 
   -- RX combinatorial
 
-  process(rx_state, data_ready, reset, DS_in_UART_out)
+  process (rx_state, data_ready, reset, DS_in_UART_out)
   begin
-    if (reset = '1') then
-      rx_new <= rx_idle;
-    else 
-      case rx_state is
-		
-        when rx_idle =>
-          if (data_ready = '1') then
-            rx_new <= rx_toBuff;
-          else 
-            rx_new <= rx_idle;
-          end if;
-          read <= '0';
-			 data <= data;
-			 
-        when rx_toBuff =>
-          data <= DS_in_UART_out;
-			 rx_new <= rx_idle;
-          read <= '1';
-      end case;
-    end if;
+    case rx_state is
+      when rx_idle =>
+        if (data_ready = '1') then
+          rx_new <= rx_toBuff;
+        else
+          rx_new <= rx_idle;
+        end if;
+        DS_read <= '0';
+        data <= data;
+
+      when rx_toBuff =>
+        data <= DS_in_UART_out;
+        rx_new <= rx_idle;
+        DS_read <= '1';
+    end case;
   end process;
 
-  REG: out_buff port map(regin => data, regout => DS_out);
+  REG : out_buff port map(regin => data, regout => DS_out);
 end architecture;
