@@ -38,10 +38,7 @@ entity Data_Sender is
     -- user in
         DS_in_mine : in std_logic;
         DS_in_mid : in std_logic;
-        DS_out : out std_logic_vector(7 downto 0);
-
-        DSR: out std_logic;
-        ds_time: in std_logic_vector(26 downto 0)
+        DS_out : out std_logic_vector(7 downto 0)
   );
 end entity;
 
@@ -93,9 +90,8 @@ begin
   begin
       case tx_state is
         when tx_idle =>
-			 DS_write <= '0';
+			    DS_write <= '0';
           DS_out_UART_in <= "00000001";
-          DSR <= '1';
           if(DS_in_mid = '1') then
             tx_new <= tx_hold_cross;
           elsif(DS_in_mine = '1') then
@@ -106,50 +102,42 @@ begin
 
         when tx_hold_mine =>
           DS_out_UART_in <= "00100000";
-			 DS_write <= '1';
-          DSR <= '0';
+			    DS_write <= '1';
           tx_new <= tx_mine;
 
         when tx_hold_cross =>
           DS_out_UART_in <= "01000000";
-			 if(buffer_empty = '1') then
-			 DS_write <= '1';
-          DSR <= '0';
-          tx_new <= tx_cross;
-			 else
-			 DS_write <= '0';
-          DSR <= '1';
-			 tx_new <= tx_hold_cross;
-			 end if;
+			    if(buffer_empty = '1') then
+			    DS_write <= '1';
+             tx_new <= tx_cross;
+			    else
+			    DS_write <= '0';
+			    tx_new <= tx_hold_cross;
+			    end if;
 
         when tx_mine =>
-         DS_out_UART_in <= "00000101";
+          DS_out_UART_in <= "00000101";
           if (DS_in_mid = '0') then
-            DSR <= '1';
             DS_write <= '0';
             tx_new <= tx_idle;
           else
-            DSR <= '1';
             DS_write <= '0';
 			      tx_new <= tx_mine;
           end if;
 
         when tx_cross =>
-		  DS_out_UART_in <= "00000111";
+		      DS_out_UART_in <= "00000111";
           if (DS_in_mid = '0') then
-            DSR <= '1';
             DS_write <= '0';
             tx_new <= tx_idle;
           else
-            DSR <= '1';
             DS_write <= '0';
 			      tx_new <= tx_cross;
           end if;
 			
           when others =>
-			 DS_out_UART_in <= "01010101";
-			 DS_write <= '0';
-			 DSR <= '1';
+			      DS_out_UART_in <= "01010101";
+			      DS_write <= '0';
             tx_new <= tx_idle;
 
       end case;

@@ -17,6 +17,8 @@ entity robot is
         mine_square_in  : in std_logic;
         ro_rx              : in std_logic; 
         ro_tx              : out std_logic;
+
+        treasure_sw         : in std_logic;
 		  
 		  DEB_led : out std_logic_vector(6 downto 0)
     );
@@ -34,6 +36,8 @@ architecture structural of robot is
 
             int_count_ctrl      : in std_logic_vector (31 downto 0);
             int_reset_ctrl      : out std_logic;
+
+            treasure_sw         : in std_logic;
             
             count_reset         : out std_logic;
             direction_l	        : out std_logic;	
@@ -52,6 +56,7 @@ architecture structural of robot is
     component eightbitregister is
         port(             
             clk                     :in std_logic;  
+				reset							:in std_logic;
             register_input          :in std_logic_vector(7 downto 0);
     
             register_output         :out std_logic_vector(7 downto 0)
@@ -73,10 +78,7 @@ architecture structural of robot is
         -- user in
             DS_in_mine      : in std_logic;
             DS_in_mid       : in std_logic;
-            DS_out          : out std_logic_vector(7 downto 0);
-
-            DSR: out std_logic;
-            ds_time: in std_logic_vector(26 downto 0)
+            DS_out          : out std_logic_vector(7 downto 0)
       );
     end component Data_sender;
 
@@ -126,13 +128,6 @@ architecture structural of robot is
               int_count_out         : out std_logic_vector(31 downto 0)
         );
         end component IntegerOfTime;
-    
-    component DSTime is
-        port (clk: in std_logic;
-                reset: in std_logic;
-                ds_count_out: out std_logic_vector(26 downto 0)
-        );
-        end component DSTime;
 
     component uart is
         port (
@@ -155,8 +150,7 @@ architecture structural of robot is
     signal direction_ll, direction_l_resett, direction_rr, direction_r_resett       : std_logic;
     signal count                                                                    : std_logic_vector (19 downto 0);
     signal int_count                                                                : std_logic_vector (31 downto 0);
-    signal ds_count_s                                                               : std_logic_vector (26 downto 0);
-    signal reset_counter, Int_Count_reset, DSR                                      : std_logic;                         
+    signal reset_counter, Int_Count_reset                                           : std_logic;                         
     --Internal reset for counter and such
     signal sensors_out                                                              : std_logic_vector (2 downto 0);
     signal mine_detect_ctr, mine_detect_ds                                          : std_logic; 
@@ -179,6 +173,8 @@ begin
                                 int_count_ctrl => int_count,
                                 int_reset_ctrl => Int_Count_reset,
 
+                                treasure_sw => treasure_sw,
+
                                 count_reset     	=> reset_counter,
                                 direction_l     	=> direction_ll,
                                 direction_l_reset   => direction_l_resett,
@@ -199,6 +195,7 @@ begin
 
     REG: eightbitregister port map(
                                 clk                 => clk,
+										  reset					 => reset,
                                 register_input      => data_in,
 
                                 register_output     => data_out
@@ -218,10 +215,7 @@ begin
                             -- user in     =>
                                 DS_in_mine          =>  mine_detect_ds,
                                 DS_in_mid           =>  ds_in_mid_s,
-                                DS_out              =>  data_in,
-                                
-                                DSR => DSR,
-                                ds_time => ds_count_s
+                                DS_out              =>  data_in
                             
     );    
 
@@ -269,12 +263,6 @@ begin
                   clk                   => clk,
                   reset                 => Int_Count_reset,
                   int_count_out         => int_count
-    );
-
-    DST: DSTime port map (
-        clk => clk,
-        reset => DSR,
-        ds_count_out => ds_count_s
     );
 
     ua : UART port map(

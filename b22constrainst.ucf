@@ -19,7 +19,7 @@ NET "reset"  LOC = "A7"; #btn3 used for reset
 #NET "btn<3>"  LOC = "L14";  #btn<3> already used as reset
 
 # 8 slide switches
-#NET "sw<7>" LOC = "N3";  # Bank = 2, Signal name = SW7
+NET "treasure_sw" LOC = "N3";  # Bank = 2, Signal name = SW7
 #NET "sw<6>" LOC = "E2";  # Bank = 3, Signal name = SW6
 #NET "sw<5>" LOC = "F3";  # Bank = 3, Signal name = SW5
 #NET "sw<4>" LOC = "G3";  # Bank = 3, Signal name = SW4

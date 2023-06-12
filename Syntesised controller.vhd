@@ -10,8 +10,11 @@ entity controller is
         count_in    	    : in std_logic_vector (19 downto 0);
         ctr_mine            : in std_logic;
         ctr_data            : in std_logic_vector (7 downto 0);
+
         int_count_ctrl      : in std_logic_vector (31 downto 0);
         int_reset_ctrl      : out std_logic;
+
+        treasure_sw         : in std_logic;
         
 	    count_reset         : out std_logic;
         direction_l	        : out std_logic;	
@@ -45,6 +48,7 @@ architecture behavioral of controller is
     mine,
     station,
     backward,
+	 stupidstate4,
     end_state
   );
   type lf_states is (
@@ -93,12 +97,42 @@ begin
 					 int_reset_ctrl <= '1';
 
                 if (reset = '0') then
-                    ctrl_new_state <= LineFollow2;
+                    ctrl_new_state <= start;
                 else
                     ctrl_new_state <= reset_state;
                 end if;
 			
-            -- when start =>
+            when start =>
+					DEB_led <= "00010";
+                count_reset        <= '1';
+                direction_l	       <= '0';
+                direction_l_reset  <= '1';
+                direction_r        <= '0';
+                direction_r_reset  <= '1';
+                ctr_mid              <= '0';
+                ctr_mine_out        <= '0';
+                lf_new_state       <= start;
+					 int_reset_ctrl <= '1';
+					case ctr_data is
+                    when "01100000" =>
+                        ctrl_new_state <= LineFollow2;
+                        int_reset_ctrl <= '1';
+                    when "00100000" =>
+                        ctrl_new_state <= LineFollow2;
+                        int_reset_ctrl <= '1';
+                    when "01000000" =>
+                        ctrl_new_state <= LineFollow2;
+                        int_reset_ctrl <= '1';
+                    when "00110000" =>
+                        ctrl_new_state <= LineFollow2;
+                        int_reset_ctrl <= '1';
+                    when "10000000" =>
+                        ctrl_new_state <= LineFollow2;
+                        int_reset_ctrl <= '1';
+                    when others =>
+                        ctrl_new_state <= start;
+                        int_reset_ctrl <= '1';
+                end case;
 			-- 		DEB_led <= "00010";
             --     count_reset       <= '0';
             --     direction_l_reset <= '0';
@@ -150,7 +184,6 @@ begin
 
             when ctrl_left =>
 					DEB_led <= "00100";
-                count_reset <= '0';
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l   <= '0';
@@ -158,6 +191,12 @@ begin
                 ctr_mid              <= '0';
                 ctr_mine_out             <= '0';
                 lf_new_state      <= start;
+
+                if (unsigned(count_in) >= 1000000) then
+                    count_reset <= '1';
+                else
+                    count_reset <= '0';
+                end if;
 
                 if (unsigned(int_count_ctrl) >= 25000000 and (sensors_out = "101")) then 
 					ctrl_new_state <= LineFollow1;
@@ -169,7 +208,6 @@ begin
 
             when ctrl_right =>
 					DEB_led <= "00101";
-                count_reset <= '0';
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l   <= '1';
@@ -177,8 +215,13 @@ begin
                 ctr_mid <= '0';
                 ctr_mine_out <= '0';
                 int_reset_ctrl <= '1';
-					  
                 lf_new_state      <= start;
+
+                if (unsigned(count_in) >= 1000000) then
+                    count_reset <= '1';
+                else
+                    count_reset <= '0';
+                end if;
 
                 if (unsigned(int_count_ctrl) >= 25000000 and (sensors_out = "101")) then 
 					ctrl_new_state <= LineFollow1;
@@ -194,71 +237,91 @@ begin
 					led_DEB(0) <= '0';
             -- switch to T2 when 011 or 001
             -- switch to LF when 110 or 100
-                count_reset <= '0';
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l   <= '1';
                 direction_r   <= '1';
                 ctr_mid <= '0';
                 ctr_mine_out <= '0';
-                int_reset_ctrl <= '1';
 					  
                 lf_new_state      <= start;
 
-                if (sensors_out = "111")  then
-                    ctrl_new_state <= turn_around_2;
+                if (unsigned(count_in) >= 1000000) then
+                    count_reset <= '1';
                 else
-                    ctrl_new_state <= turn_around_1;
+                    count_reset <= '0';
                 end if;
 
-            when turn_around_2 =>
-					DEB_led <= "00111";
-                count_reset <= '0';
-                direction_l_reset <= '0';
-                direction_r_reset <= '0';
-                direction_l   <= '1';
-                direction_r   <= '1';
-                ctr_mid <= '0';
-                ctr_mine_out <= '0';
-                int_reset_ctrl <= '1';
-					  
-			    lf_new_state      <= start;
+                if (unsigned(int_count_ctrl) >= 75000000 and (sensors_out = "101" or sensors_out = "001" or sensors_out="011")) then 
+					ctrl_new_state <= LineFollow1;
+					int_reset_ctrl <= '1';
+				else
+					ctrl_new_state <= turn_around_1;
+					int_reset_ctrl <= '0';
+				end if;	
 
-                if (sensors_out = "011" or sensors_out = "001")  then
-                    ctrl_new_state <= turn_around_3;
-                else
-                    ctrl_new_state <= turn_around_2;
-                end if;
+            -- when turn_around_2 =>
+			-- 		DEB_led <= "00111";
+            --     direction_l_reset <= '0';
+            --     direction_r_reset <= '0';
+            --     direction_l   <= '1';
+            --     direction_r   <= '1';
+            --     ctr_mid <= '0';
+            --     ctr_mine_out <= '0';
+            --     int_reset_ctrl <= '1';
+			--     lf_new_state      <= start;
+
+            --     if (unsigned(count_in) >= 1000000) then
+            --         count_reset <= '1';
+            --     else
+            --         count_reset <= '0';
+            --     end if;
+
+            --     if (sensors_out = "011" or sensors_out = "001")  then
+            --         ctrl_new_state <= turn_around_3;
+            --     else
+            --         ctrl_new_state <= turn_around_2;
+            --     end if;
                     
-            when turn_around_3 =>
-					DEB_led <= "01000";
-                count_reset <= '0';
-                direction_l_reset <= '0';
-                direction_r_reset <= '0';
-                direction_l   <= '1';
-                direction_r   <= '1';
-                ctr_mid <= '0';
-                ctr_mine_out <= '0';
-                int_reset_ctrl <= '1';
+            -- when turn_around_3 =>
+			-- 		DEB_led <= "01000";
+            --     direction_l_reset <= '0';
+            --     direction_r_reset <= '0';
+            --     direction_l   <= '1';
+            --     direction_r   <= '1';
+            --     ctr_mid <= '0';
+            --     ctr_mine_out <= '0';
+            --     int_reset_ctrl <= '1';
 					  
-					 lf_new_state      <= start;
+			-- 		 lf_new_state      <= start;
+                
+            --     if (unsigned(count_in) >= 1000000) then
+            --         count_reset <= '1';
+            --     else
+            --         count_reset <= '0';
+            --     end if;
 
-                if (sensors_out = "110" or sensors_out = "100" or sensors_out = "101")  then
-                    ctrl_new_state <= LineFollow1;
-                else
-                    ctrl_new_state <= turn_around_3;
-                end if;
+            --     if (sensors_out = "110" or sensors_out = "100" or sensors_out = "101")  then
+            --         ctrl_new_state <= stupidstate1;
+            --     else
+            --         ctrl_new_state <= turn_around_3;
+            --     end if;
 
 			when stupidstate1 =>
 							DEB_led <= "11111";
                 lf_new_state<= start;
 				ctr_mid <= '0';
 				ctr_mine_out <='0'; 
-				count_reset       <= '0';
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l   <= '1';
                 direction_r   <= '0';
+
+                if (unsigned(count_in) >= 1000000) then
+                    count_reset <= '1';
+                else
+                    count_reset <= '0';
+                end if;
 								
 				if (unsigned(int_count_ctrl) >= 25000000) then 
 					ctrl_new_state <= LineFollow1;
@@ -406,11 +469,16 @@ begin
                     lf_new_state<= start;
                     ctr_mid <= '1';
                     ctr_mine_out <='0'; 
-                    count_reset       <= '0';
                     direction_l_reset <= '0';
                     direction_r_reset <= '0';
                     direction_l   <= '1';
                     direction_r   <= '0';
+
+                    if (unsigned(count_in) >= 1000000) then
+                        count_reset <= '1';
+                    else
+                        count_reset <= '0';
+                    end if;
                                     
                     if (unsigned(int_count_ctrl) >= 25000000) then 
                         ctrl_new_state <= LineFollow2;
@@ -546,11 +614,16 @@ begin
                     lf_new_state<= start;
                     ctr_mid <= '0';
                     ctr_mine_out <='0'; 
-                    count_reset       <= '0';
                     direction_l_reset <= '0';
                     direction_r_reset <= '0';
                     direction_l   <= '1';
                     direction_r   <= '0';
+
+                    if (unsigned(count_in) >= 1000000) then
+                        count_reset <= '1';
+                    else
+                        count_reset <= '0';
+                    end if;
 
                     if (unsigned(int_count_ctrl) >= 12500000) then 
                         ctrl_new_state <= cross;
@@ -570,10 +643,19 @@ begin
                 ctr_mid              <= '0';
                 ctr_mine_out             <= '1';
                 int_reset_ctrl <= '1';
-					  
                 lf_new_state      <= start;
 
-                ctrl_new_state <= backward;
+                if treasure_sw = '1' then
+                    if (unsigned(int_count_ctrl) >= 200000000) then 
+                        ctrl_new_state <= backward;
+                        int_reset_ctrl <= '1';
+                    else
+                        ctrl_new_state <= mine;
+                        int_reset_ctrl <= '0';
+                    end if;
+                else
+                    ctrl_new_state <= backward;
+                end if;  
 
             when station =>
 					DEB_led <= "10001";
@@ -593,123 +675,165 @@ begin
             when backward =>
 					DEB_led <= "10010";
                     -- add small lf section?
+                lf_new_state<= start;
                 ctr_mid <= '1';
-                ctr_mine_out <= '0';
-                int_reset_ctrl <= '1';
+                ctr_mine_out <='0'; 
+                direction_l_reset <= '0';
+                direction_r_reset <= '0';
+                direction_l   <= '0';
+                direction_r   <= '1';
+
+                if (unsigned(count_in) >= 1000000) then
+                    count_reset <= '1';
+                else
+                    count_reset <= '0';
+                end if;
+
+                if (unsigned(int_count_ctrl) >= 12500000 and sensors_out = "000") then 
+                    ctrl_new_state <= stupidstate4;
+                    int_reset_ctrl <= '1';
+                else
+                    ctrl_new_state <= backward;
+                    int_reset_ctrl <= '0';
+                end if;
 					  
-                case lf_state is
-                    when start =>
-                        count_reset <= '1';
-                        direction_l_reset <= '1';
-                        direction_r_reset <= '1';
-                        direction_l   <= '1';
-                        direction_r   <= '1';
+                -- case lf_state is
+                --     when start =>
+                --         count_reset <= '1';
+                --         direction_l_reset <= '1';
+                --         direction_r_reset <= '1';
+                --         direction_l   <= '1';
+                --         direction_r   <= '1';
 								
-                        if ((sensors_out="101") or (sensors_out="010") or (sensors_out="111")) then
-                            lf_new_state <= forward;
-									 ctrl_new_state <= backward;
-                        elsif (sensors_out = "001") then
-                              lf_new_state  <= g_left;
-										ctrl_new_state <= backward;
-										ctrl_new_state <= backward;
-                        elsif (sensors_out="011") then
-                              lf_new_state <= s_left;
-										ctrl_new_state <= backward;
-                        elsif (sensors_out="100") then 
-                              lf_new_state <= g_right;
-										ctrl_new_state <= backward;
-                        elsif (sensors_out="110") then
-                               lf_new_state <= s_right;
-										 ctrl_new_state <= backward;
-                        elsif (sensors_out="000") then  
-										ctrl_new_state<= stupidstate3;
-                        else 
-                            lf_new_state<= start;  
-									 ctrl_new_state <= backward;
-                        end if;
+                --         if ((sensors_out="101") or (sensors_out="010") or (sensors_out="111")) then
+                --             lf_new_state <= forward;
+				-- 					 ctrl_new_state <= backward;
+                --         elsif (sensors_out = "001") then
+                --               lf_new_state  <= g_left;
+				-- 						ctrl_new_state <= backward;
+				-- 						ctrl_new_state <= backward;
+                --         elsif (sensors_out="011") then
+                --               lf_new_state <= s_left;
+				-- 						ctrl_new_state <= backward;
+                --         elsif (sensors_out="100") then 
+                --               lf_new_state <= g_right;
+				-- 						ctrl_new_state <= backward;
+                --         elsif (sensors_out="110") then
+                --                lf_new_state <= s_right;
+				-- 						 ctrl_new_state <= backward;
+                --         elsif (sensors_out="000") then  
+				-- 						ctrl_new_state<= stupidstate3;
+                --         else 
+                --             lf_new_state<= start;  
+				-- 					 ctrl_new_state <= backward;
+                --         end if;
                         
                 
-                    when forward =>
-                        count_reset       <= '0'; 
-                        direction_l_reset <= '0';
-                        direction_r_reset <= '0';
-                        direction_l   <= '0';
-                        direction_r   <= '1'; 
-								ctrl_new_state <= backward;
-                        if (unsigned(count_in) >= 1000000) then
-                            lf_new_state<= start;
-                        else 
-                            lf_new_state<= forward;
-                        end if; 
+                --     when forward =>
+                --         count_reset       <= '0'; 
+                --         direction_l_reset <= '0';
+                --         direction_r_reset <= '0';
+                --         direction_l   <= '0';
+                --         direction_r   <= '1'; 
+				-- 				ctrl_new_state <= backward;
+                --         if (unsigned(count_in) >= 1000000) then
+                --             lf_new_state<= start;
+                --         else 
+                --             lf_new_state<= forward;
+                --         end if; 
                     
-                    when g_left =>
-                         count_reset       <= '0';
-                         direction_l_reset <= '0';
-                         direction_r_reset <= '1';
-                         direction_l   <= '0';
-                         direction_r   <= '0';
-								 ctrl_new_state <= backward;
-                         if (unsigned(count_in) >= 1000000) then
-                            lf_new_state<= start;
-                        else 
-                            lf_new_state<= g_left;
-                        end if;
+                --     when g_left =>
+                --          count_reset       <= '0';
+                --          direction_l_reset <= '0';
+                --          direction_r_reset <= '1';
+                --          direction_l   <= '0';
+                --          direction_r   <= '0';
+				-- 				 ctrl_new_state <= backward;
+                --          if (unsigned(count_in) >= 1000000) then
+                --             lf_new_state<= start;
+                --         else 
+                --             lf_new_state<= g_left;
+                --         end if;
                          
-                    when s_left =>
-                         count_reset       <= '0';
-                         direction_l_reset <= '0';
-                         direction_r_reset <= '0';
-                         direction_l   <= '0';
-                        direction_r    <= '0';
-								ctrl_new_state <= backward;
-                         if (unsigned(count_in) >= 1000000) then
-                            lf_new_state<= start;
-                         else 
-                            lf_new_state<= s_left;
-                         end if;
+                --     when s_left =>
+                --          count_reset       <= '0';
+                --          direction_l_reset <= '0';
+                --          direction_r_reset <= '0';
+                --          direction_l   <= '0';
+                --         direction_r    <= '0';
+				-- 				ctrl_new_state <= backward;
+                --          if (unsigned(count_in) >= 1000000) then
+                --             lf_new_state<= start;
+                --          else 
+                --             lf_new_state<= s_left;
+                --          end if;
         
-                    when g_right =>
-                         count_reset       <= '0';
-                         direction_l_reset <= '1';
-                         direction_r_reset <= '0';
-                         direction_l   <= '0';
-                         direction_r   <= '1';
-								 ctrl_new_state <= backward;
-                         if (unsigned(count_in) >= 1000000) then
-                            lf_new_state<= start;
-                         else 
-                            lf_new_state<= g_right;
-                         end if;
+                --     when g_right =>
+                --          count_reset       <= '0';
+                --          direction_l_reset <= '1';
+                --          direction_r_reset <= '0';
+                --          direction_l   <= '0';
+                --          direction_r   <= '1';
+				-- 				 ctrl_new_state <= backward;
+                --          if (unsigned(count_in) >= 1000000) then
+                --             lf_new_state<= start;
+                --          else 
+                --             lf_new_state<= g_right;
+                --          end if;
         
-                    when s_right =>
-                         count_reset       <= '0';
-                         direction_l_reset <= '0';
-                         direction_r_reset <= '0';
-                         direction_l   <= '1';
-                         direction_r   <= '1';
-								 ctrl_new_state <= backward;
-                         if (unsigned(count_in) >= 1000000) then
-                            lf_new_state<= start;
-                         else 
-                            lf_new_state<= s_right;
-                         end if;
-							when others =>
-								DEB_led <= "10011";
-                                 count_reset       <= '0';
-                                 direction_l_reset <= '1';
-                                 direction_r_reset <= '1';
-                                 direction_l   <= '0';
-                                 direction_r   <= '0';
-                                lf_new_state<= start;
-                                ctrl_new_state <= backward;
+                --     when s_right =>
+                --          count_reset       <= '0';
+                --          direction_l_reset <= '0';
+                --          direction_r_reset <= '0';
+                --          direction_l   <= '1';
+                --          direction_r   <= '1';
+				-- 				 ctrl_new_state <= backward;
+                --          if (unsigned(count_in) >= 1000000) then
+                --             lf_new_state<= start;
+                --          else 
+                --             lf_new_state<= s_right;
+                --          end if;
+				-- 			when others =>
+				-- 				DEB_led <= "10011";
+                --                  count_reset       <= '0';
+                --                  direction_l_reset <= '1';
+                --                  direction_r_reset <= '1';
+                --                  direction_l   <= '0';
+                --                  direction_r   <= '0';
+                --                 lf_new_state<= start;
+                --                 ctrl_new_state <= backward;
         
-                end case; 
+                -- end case; 
+					 
+				when stupidstate4 =>
+							DEB_led <= "11011";
+                lf_new_state<= start;
+				ctr_mid <= '0';
+				ctr_mine_out <='0'; 
+                direction_l_reset <= '0';
+                direction_r_reset <= '0';
+                direction_l   <= '1';
+                direction_r   <= '0';
+
+                if (unsigned(count_in) >= 1000000) then
+                    count_reset <= '1';
+                else
+                    count_reset <= '0';
+                end if;
+								
+				if (unsigned(int_count_ctrl) >= 12500000) then 
+					ctrl_new_state <= cross;
+					int_reset_ctrl <= '1';
+				else
+					ctrl_new_state <= stupidstate4;
+					int_reset_ctrl <= '0';
+				end if;				
                    
 
             when end_state =>
 					DEB_led <= "10100";
                 -- this state only is called when the C code is finised running (celebration dance?)
-                count_reset <= '0';
+                count_reset <= '1';
                 direction_l_reset <= '1';
                 direction_r_reset <= '1';
                 direction_l   <= '0';
@@ -717,7 +841,7 @@ begin
                 ctr_mid <= '0';
                 ctr_mine_out <= '0';
                 int_reset_ctrl <= '1';
-					  
+                lf_new_state <= start;					  
 
                 ctrl_new_state<= end_state;
 
@@ -726,7 +850,7 @@ begin
                 ctrl_new_state<= reset_state;
 					 DEB_led <= "10101";
                 lf_new_state <= start;
-                count_reset <= '0';
+                count_reset <= '1';
                 direction_l_reset <= '1';
                 direction_r_reset <= '1';
                 direction_l   <= '0';
