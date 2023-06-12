@@ -76,13 +76,13 @@ architecture structural of robot is
             DS_out          : out std_logic_vector(7 downto 0);
 
             DSR: out std_logic;
-            ds_time: in std_logic_vector(12 downto 0)
+            ds_time: in std_logic_vector(26 downto 0)
       );
     end component Data_sender;
 
     component Mine_detector is
         generic (
-            trig_count      : integer := 2700 -- (50*10^6/trig_freq)/2
+            trig_count      : integer := 2575 -- (50*10^6/trig_freq)/2
             );
           port (
             clk             : in std_logic;
@@ -130,7 +130,7 @@ architecture structural of robot is
     component DSTime is
         port (clk: in std_logic;
                 reset: in std_logic;
-                ds_count_out: out std_logic_vector(12 downto 0)
+                ds_count_out: out std_logic_vector(26 downto 0)
         );
         end component DSTime;
 
@@ -155,7 +155,7 @@ architecture structural of robot is
     signal direction_ll, direction_l_resett, direction_rr, direction_r_resett       : std_logic;
     signal count                                                                    : std_logic_vector (19 downto 0);
     signal int_count                                                                : std_logic_vector (31 downto 0);
-    signal ds_count_s                                                               : std_logic_vector (12 downto 0);
+    signal ds_count_s                                                               : std_logic_vector (26 downto 0);
     signal reset_counter, Int_Count_reset, DSR                                      : std_logic;                         
     --Internal reset for counter and such
     signal sensors_out                                                              : std_logic_vector (2 downto 0);

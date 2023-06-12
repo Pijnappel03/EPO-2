@@ -90,6 +90,7 @@ begin
                 ctr_mid              <= '0';
                 ctr_mine_out        <= '0';
                 lf_new_state       <= start;
+					 int_reset_ctrl <= '1';
 
                 if (reset = '0') then
                     ctrl_new_state <= LineFollow2;
@@ -301,7 +302,6 @@ begin
 										  
 												lf_new_state <= start;
 												ctrl_new_state <= stupidstate2;
-												
 												
                                 elsif (sensors_out = "001") then
                                       lf_new_state <= g_left;

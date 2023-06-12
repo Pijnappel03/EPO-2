@@ -7,12 +7,12 @@ use IEEE.numeric_std.all;
 entity DSTime is
 port (clk: in std_logic;
 reset: in std_logic;
-ds_count_out: out std_logic_vector(12 downto 0)
+ds_count_out: out std_logic_vector(26 downto 0)
 );
 end entity DSTime;
 
 architecture behavioural of DSTime is
-signal count, new_count: unsigned (12 downto 0);
+signal count, new_count: unsigned (26 downto 0);
 begin
 process ( clk )
 begin
