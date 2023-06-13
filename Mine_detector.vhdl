@@ -61,8 +61,10 @@ begin
             count <= count + 1;
             new_state <= setup;
             register_enable <= '0';
+            register_input <= (others => '0');
           elsif (square_in = '0') then
-            register_input <= signed(count - base_count);
+            register_input <= std_logic_vector(signed(count - base_count));
+            count <= (others => '0');
             register_enable <= '1';
             new_state <= running;
           else
@@ -71,8 +73,7 @@ begin
             register_enable <= '0';
             new_state <= reset_state;
           end if;
-        end case;
-
+        
         when running =>
           register_enable <= '0';
           register_input <= (others => '0');
@@ -84,12 +85,15 @@ begin
               sig_out <= '1';
               count <= (others => '0');
           else
-              if (count = base_count + signed(register_output) + 25) then
+              if (count >= unsigned(base_count + signed(register_output)+100)) then
                   sig_out <= '1';
+                  count <= (others => '0');
               elsif (square_in = '1') then
                   count <= count + 1;
+                  sig_out <= '0';
               else
                   count <= (others => '0');
+                  sig_out <= '0';
               end if;
           end if;
         end case;

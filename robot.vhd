@@ -20,7 +20,7 @@ entity robot is
 
         treasure_sw         : in std_logic;
 		  
-		  DEB_led : out std_logic_vector(6 downto 0);
+		  DEB_led : out std_logic_vector(7 downto 0);
           DIR_led : out std_logic_vector(7 downto 0)
     );
 end entity robot;
@@ -48,8 +48,7 @@ architecture structural of robot is
             ctr_mine_out        : out std_logic;
             ctr_mid             : out std_logic;
 				
-				DEB_led : out std_logic_vector(4 downto 0);
-				  led_DEB :out std_logic_vector(1 downto 0);
+				DEB_led : out std_logic_vector(7 downto 0);
                   DIR_led :out std_logic_vector(7 downto 0)
     
       );
@@ -199,13 +198,14 @@ begin
                                 ctr_mine_out        => mine_detect_ds,
                                 ctr_mid             => ds_in_mid_s,
 										  
-										  DEB_led(0) => DEB_led(0),
-										  DEB_led(1) => DEB_led(1),
-										  DEB_led(2) => DEB_led(2),
-										  DEB_led(3) => DEB_led(3),
-										  DEB_led(4) => DEB_led(4),
-										  led_DEB(0) => DEB_led(5),
-										  led_DEB(1) =>DEB_led(6),
+										DEB_led(0) => DEB_led(0),
+										DEB_led(1) => DEB_led(1),
+										DEB_led(2) => DEB_led(2),
+										DEB_led(3) => DEB_led(3),
+										DEB_led(4) => DEB_led(4),
+										DEB_led(5) => DEB_led(5),
+										DEB_led(6) => DEB_led(6),
+                                        DEB_led(7) => DEB_led(7),
                                          
                                           DIR_led(0) => DIR_led(0),
                                           DIR_led(1) => DIR_led(1),
@@ -252,18 +252,19 @@ begin
                                 reset              => reset,
                                 square_in          => mine_square_in,
                                 sensors_out        => sensors_out,
-                                register_output    <= mine_mem_out_s,
+                                register_output    => mine_mem_out_s,
 
                                 mine_out           => mine_detect_ctr,
                                 register_input     => mine_mem_in_sig,
-                                register_enable    => mine_mem_out_s
+                                register_enable    => mem_en
+    );
 
     MEM: eightbitmemory port map (
-                                register_input      <= mine_mem_in_sig,
+                                register_input      => mine_mem_in_sig,
                                 clk                 => clk,
                                 reset			    => reset,
 
-                                enable	            <= mem_en,
+                                enable	            => mem_en,
                                 register_output     => mine_mem_out_s
     );
 

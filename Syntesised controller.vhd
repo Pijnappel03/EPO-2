@@ -24,8 +24,7 @@ entity controller is
         ctr_mine_out        : out std_logic;
         ctr_mid             : out std_logic;
 		  
-		  DEB_led : out std_logic_vector(4 downto 0);
-		  led_DEB : out std_logic_vector(1 downto 0);
+		  DEB_led : out std_logic_vector(7 downto 0);
           DIR_led : out std_logic_vector(7 downto 0)      
 
   );
@@ -64,8 +63,14 @@ architecture behavioral of controller is
   signal ctrl_state, ctrl_new_state : ctrl_states;
   signal lf_state, lf_new_state : lf_states;
 begin
-    
-	 led_DEB(1) <= ctr_mine;
+     DEB_led(0) <= ctr_mine;
+	 DEB_led(1) <= ctr_mine;
+     DEB_led(2) <= ctr_mine;
+	 DEB_led(3) <= ctr_mine;
+     DEB_led(4) <= ctr_mine;
+	 DEB_led(5) <= ctr_mine;
+     DEB_led(6) <= ctr_mine;
+	 DEB_led(7) <= ctr_mine;
 	 
     -- state assignments
     process(clk, reset)
@@ -81,42 +86,30 @@ begin
         end if;
     end process;
 
-    process(clk, ctrl_state)
+    process(clk, ctr_data)
     begin
-        case ctrl_state is 
-            when reset_state =>
-                DIR_led <= "11111111";
-            when start => 
-                DIR_led <= "11111111";
-            when others =>
-                DIR_led <= "11111111";
-            when end_state =>
-                DIR_led <= "11111111";
-            when LineFollow1 =>
-                DIR_led <= "00111100";
-            when stupidstate1 => 
-                DIR_led <= "00111100";
-            when stupidstate2 => 
-                DIR_led <= "00111100";
-            when stupidstate3 => 
-                DIR_led <= "00111100";   
-            when stupidstate4 => 
-                DIR_led <= "00111100"; 
-            when ctrl_left =>
-                DIR_led <= "11100000";
-            when ctrl_right =>
-                DIR_led <= "00000111";  
-            when turn_around_1 =>
-                DIR_led <= "11000011";
-        end case;       
-
+        case ctr_data is
+                    when "01100000" =>
+                        DIR_led <= "00111100";
+                    when "00100000" =>
+                        DIR_led <= "00000111";
+                    when "01000000" =>
+                        DIR_led <= "11100000";
+                    when "00110000" =>
+                        DIR_led <= "11111111";
+                    when "10000000" =>
+                        DIR_led <= "11000011";
+                    when others =>
+                        DIR_led <= "11011011"; 
+                end case;
+    end process;
 
 
     process(clk,ctrl_state, lf_state, sensors_out, ctr_mine, ctr_data, reset, count_in)
     begin
         case ctrl_state is
             when reset_state =>
-					DEB_led <= "00001";
+					
                 count_reset        <= '1';
                 direction_l	       <= '0';
                 direction_l_reset  <= '1';
@@ -134,7 +127,7 @@ begin
                 end if;
 			
             when start =>
-					DEB_led <= "00010";
+					
                 count_reset        <= '1';
                 direction_l	       <= '0';
                 direction_l_reset  <= '1';
@@ -164,7 +157,7 @@ begin
                         ctrl_new_state <= start;
                         int_reset_ctrl <= '1';
                 end case;
-			-- 		DEB_led <= "00010";
+			-- 		
             --     count_reset       <= '0';
             --     direction_l_reset <= '0';
             --     direction_r_reset <= '0';
@@ -181,7 +174,7 @@ begin
             --         ctrl_new_state <= start;
             --     end if;
             when cross =>
-					DEB_led <= "00011";
+					
                 count_reset        <= '0';
                 direction_l	       <= '0';
                 direction_l_reset  <= '1';
@@ -214,7 +207,7 @@ begin
                 end case;
 
             when ctrl_left =>
-					DEB_led <= "00100";
+					
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l   <= '0';
@@ -238,7 +231,7 @@ begin
 				end if;	
 
             when ctrl_right =>
-					DEB_led <= "00101";
+					
                 direction_l_reset <= '0';
                 direction_r_reset <= '0';
                 direction_l   <= '1';
@@ -264,8 +257,6 @@ begin
                 
 
             when turn_around_1  =>
-					DEB_led <= "00110";
-					led_DEB(0) <= '0';
             -- switch to T2 when 011 or 001
             -- switch to LF when 110 or 100
                 direction_l_reset <= '0';
@@ -292,7 +283,7 @@ begin
 				end if;	
 
             -- when turn_around_2 =>
-			-- 		DEB_led <= "00111";
+			-- 		
             --     direction_l_reset <= '0';
             --     direction_r_reset <= '0';
             --     direction_l   <= '1';
@@ -315,7 +306,7 @@ begin
             --     end if;
                     
             -- when turn_around_3 =>
-			-- 		DEB_led <= "01000";
+			-- 		
             --     direction_l_reset <= '0';
             --     direction_r_reset <= '0';
             --     direction_l   <= '1';
@@ -339,7 +330,7 @@ begin
             --     end if;
 
 			when stupidstate1 =>
-							DEB_led <= "11111";
+							
                 lf_new_state<= start;
 				ctr_mid <= '0';
 				ctr_mine_out <='0'; 
@@ -354,7 +345,7 @@ begin
                     count_reset <= '0';
                 end if;
 								
-				if (unsigned(int_count_ctrl) >= 25000000) then 
+				if (unsigned(int_count_ctrl) >= 12500000) then 
 					ctrl_new_state <= LineFollow1;
 					int_reset_ctrl <= '1';
 				else
@@ -380,7 +371,7 @@ begin
                     ctr_mine_out <= '0';
                     case lf_state is 
                             when start =>
-										DEB_led <= "01001";
+										
                                 count_reset <= '1';
                                 direction_l_reset <= '1';
                                 direction_r_reset <= '1';
@@ -419,7 +410,7 @@ begin
                                 
                             
                             when forward =>
-										DEB_led <= "01010";
+										
                                 count_reset       <= '0'; 
                                 direction_l_reset <= '0';
                                 direction_r_reset <= '0';
@@ -433,7 +424,7 @@ begin
 										  
                             
                             when g_left =>
-										DEB_led <= "01011";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '1';
                                  direction_r_reset <= '0';
@@ -446,7 +437,7 @@ begin
                                 end if;
                                  
                             when s_left =>
-										DEB_led <= "01100";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '0';
                                  direction_r_reset <= '0';
@@ -459,7 +450,7 @@ begin
                                  end if;
                              
                             when g_right =>
-										DEB_led <= "01101";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '0';
                                  direction_r_reset <= '1';
@@ -472,7 +463,7 @@ begin
                                  end if;
 											
                             when s_right =>
-										DEB_led <= "01110";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '0';
                                  direction_r_reset <= '0';
@@ -484,7 +475,7 @@ begin
                                  else lf_new_state<= s_right;
                                  end if;
                             when others =>
-										DEB_led <= "01111";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '1';
                                  direction_r_reset <= '1';
@@ -496,7 +487,7 @@ begin
                     end if;
 						  
 				when stupidstate2 =>
-							DEB_led <= "11110";
+							
                     lf_new_state<= start;
                     ctr_mid <= '1';
                     ctr_mine_out <='0'; 
@@ -523,11 +514,10 @@ begin
 				when LineFollow2=>
 					ctr_mid <= '0';
 					ctr_mine_out <= '0';
-					led_DEB(0) <= '1';
                     int_reset_ctrl <= '1';
 					case lf_state is 
                             when start =>
-										DEB_led <= "01001";
+										
                                 count_reset <= '1';
                                 direction_l_reset <= '1';
                                 direction_r_reset <= '1';
@@ -565,7 +555,7 @@ begin
                                 
                             
                             when forward =>
-										DEB_led <= "01010";
+										
                                 count_reset       <= '0'; 
                                 direction_l_reset <= '0';
                                 direction_r_reset <= '0';
@@ -578,7 +568,7 @@ begin
                                 end if; 
                             
                             when g_left =>
-										DEB_led <= "01011";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '1';
                                  direction_r_reset <= '0';
@@ -591,7 +581,7 @@ begin
                                 end if;
                                  
                             when s_left =>
-										DEB_led <= "01100";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '0';
                                  direction_r_reset <= '0';
@@ -604,7 +594,7 @@ begin
                                  end if;
                              
                             when g_right =>
-										DEB_led <= "01101";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '0';
                                  direction_r_reset <= '1';
@@ -617,7 +607,7 @@ begin
                                  end if;
                              
                             when s_right =>
-										DEB_led <= "01110";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '0';
                                  direction_r_reset <= '0';
@@ -630,7 +620,7 @@ begin
                                  end if;
 
                             when others =>
-										DEB_led <= "01111";
+										
                                  count_reset       <= '0';
                                  direction_l_reset <= '1';
                                  direction_r_reset <= '1';
@@ -641,7 +631,7 @@ begin
                         end case;
 
                 when stupidstate3 =>
-                        DEB_led <= "11110";
+                        
                     lf_new_state<= start;
                     ctr_mid <= '0';
                     ctr_mine_out <='0'; 
@@ -665,7 +655,7 @@ begin
                     end if;
 
             when mine =>
-					DEB_led <= "10000";
+					
                 count_reset        <= '0';
                 direction_l	       <= '0';
                 direction_l_reset  <= '1';
@@ -689,7 +679,7 @@ begin
                 end if;  
 
             when station =>
-					DEB_led <= "10001";
+					
                 count_reset        <= '0';
                 direction_l	       <= '0';
                 direction_l_reset  <= '1';
@@ -704,7 +694,7 @@ begin
                 ctrl_new_state <= backward;
 
             when backward =>
-					DEB_led <= "10010";
+					
                     -- add small lf section?
                 lf_new_state<= start;
                 ctr_mid <= '1';
@@ -825,7 +815,7 @@ begin
                 --             lf_new_state<= s_right;
                 --          end if;
 				-- 			when others =>
-				-- 				DEB_led <= "10011";
+				-- 				
                 --                  count_reset       <= '0';
                 --                  direction_l_reset <= '1';
                 --                  direction_r_reset <= '1';
@@ -837,7 +827,7 @@ begin
                 -- end case; 
 					 
 				when stupidstate4 =>
-							DEB_led <= "11011";
+							
                 lf_new_state<= start;
 				ctr_mid <= '0';
 				ctr_mine_out <='0'; 
@@ -862,7 +852,7 @@ begin
                    
 
             when end_state =>
-					DEB_led <= "10100";
+					
                 -- this state only is called when the C code is finised running (celebration dance?)
                 count_reset <= '1';
                 direction_l_reset <= '1';
@@ -879,7 +869,7 @@ begin
             when others =>
                 -- to prevent latches
                 ctrl_new_state<= reset_state;
-					 DEB_led <= "10101";
+					 
                 lf_new_state <= start;
                 count_reset <= '1';
                 direction_l_reset <= '1';
