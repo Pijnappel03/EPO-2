@@ -84,16 +84,30 @@ architecture structural of robot is
 
     component Mine_detector is
         generic (
-            trig_count      : integer := 2575 -- (50*10^6/trig_freq)/2
+            trig_count      : integer := 2700 -- (50*10^6/trig_freq)/2
             );
           port (
             clk             : in std_logic;
+            reset           : in std_logic;
             square_in       : in std_logic;
             sensors_out     : in std_logic_vector(2 downto 0);
+            register_output : in std_logic_vector (8 downto 0);
             
-            mine_out        : out std_logic
+            mine_out        : out std_logic;
+            register_input : out std_logic_vector(8 downto 0);
+            register_enable : out std_logic
           );
     end component Mine_detector;
+
+    component eightbitmemory is
+        port(   register_input       :in std_logic_vector(8 downto 0);
+                clk         :in std_logic;
+                reset			: in std_logic;
+    
+                enable	: in std_logic;
+                register_output      :out std_logic_vector(8 downto 0)
+        );
+    end component eightbitmemory;
 
     component motorcontrol is
         port (
@@ -156,9 +170,9 @@ architecture structural of robot is
     signal mine_detect_ctr, mine_detect_ds                                          : std_logic; 
     signal data_in, data_out                                                        : std_logic_vector (7 downto 0); 
     signal ds_in_mid_s, read_s, data_ready_s, buffer_empty_s, write_s               : std_logic;
-    signal ds_out_uart_in_s, DS_in_UART_out_s                                       : std_logic_vector (7 downto 0); 
-
- 
+    signal ds_out_uart_in_s, DS_in_UART_out_s                                       : std_logic_vector (7 downto 0);
+    signal mine_mem_in_sig, mine_mem_out_s                                          : std_logic_vector (8 downto 0);
+    signal mem_en                                                                   : std_logic; 
 begin
     -- external signal handling
 
@@ -220,11 +234,23 @@ begin
     );    
 
     MD: Mine_detector port map (
-                                clk                =>  clk,
-                                square_in          =>  mine_square_in,
-                                sensors_out        =>  sensors_out,
+                                clk                => clk,
+                                reset              => reset,
+                                square_in          => mine_square_in,
+                                sensors_out        => sensors_out,
+                                register_output    <= mine_mem_out_s,
 
-                                mine_out           =>  mine_detect_ctr
+                                mine_out           => mine_detect_ctr,
+                                register_input     => mine_mem_in_sig,
+                                register_enable    => mine_mem_out_s
+
+    MEM: eightbitmemory port map (
+                                register_input      <= mine_mem_in_sig,
+                                clk                 => clk,
+                                reset			    => reset,
+
+                                enable	            <= mem_en,
+                                register_output     => mine_mem_out_s
     );
 
     MCL: motorcontrol port map(

@@ -5,8 +5,8 @@ use IEEE.numeric_std.all;
 entity eightbitregister is
     port(   register_input       :in std_logic_vector(7 downto 0);
             clk         :in std_logic;
-				reset			: in std_logic;
-    
+				    reset			: in std_logic;
+
             register_output      :out std_logic_vector(7 downto 0)
     );
 end entity eightbitregister;

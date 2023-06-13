@@ -81,7 +81,6 @@ begin
     end process;
 
     process(clk,ctrl_state, lf_state, sensors_out, ctr_mine, ctr_data, reset, count_in)
-		variable stupidcount : integer;
     begin
         case ctrl_state is
             when reset_state =>
