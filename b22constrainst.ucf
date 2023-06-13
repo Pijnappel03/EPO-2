@@ -51,6 +51,17 @@ NET "treasure_sw" LOC = "N3";  # Bank = 2, Signal name = SW7
 # 8 discrete led
 #========================================================
 #NET "DEB_led<7>" LOC = "G1" ; # Bank = 3, Signal name = LD7
+#NET "DEB_led<6>" LOC = "P4" ; # Bank = 2, Signal name = LD6
+#NET "DEB_led<5>" LOC = "N4" ;  # Bank = 2, Signal name = LD5
+#NET "DEB_led<4>" LOC = "N5" ;  # Bank = 2, Signal name = LD4
+#NET "DEB_led<3>" LOC = "P6" ; # Bank = 2, Signal name = LD3
+#NET "DEB_led<2>" LOC = "P7" ; # Bank = 3, Signal name = LD2
+#NET "DEB_led<1>" LOC = "M11" ; # Bank = 2, Signal name = LD1
+#NET "DEB_led<0>" LOC = "M5" ;  # Bank = 2, Signal name = LD0
+#========================================================
+# 8 discrete led for direction
+#========================================================
+NET "DEB_led<7>" LOC = "G1" ; # Bank = 3, Signal name = LD7
 NET "DEB_led<6>" LOC = "P4" ; # Bank = 2, Signal name = LD6
 NET "DEB_led<5>" LOC = "N4" ;  # Bank = 2, Signal name = LD5
 NET "DEB_led<4>" LOC = "N5" ;  # Bank = 2, Signal name = LD4
