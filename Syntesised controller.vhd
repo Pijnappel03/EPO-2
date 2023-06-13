@@ -25,7 +25,8 @@ entity controller is
         ctr_mid             : out std_logic;
 		  
 		  DEB_led : out std_logic_vector(4 downto 0);
-		  led_DEB :out std_logic_vector(1 downto 0)
+		  led_DEB : out std_logic_vector(1 downto 0);
+          DIR_led : out std_logic_vector(7 downto 0)      
 
   );
 end controller;
@@ -79,6 +80,37 @@ begin
             end if;
         end if;
     end process;
+
+    process(clk, ctrl_state)
+    begin
+        case ctrl_state is 
+            when reset_state =>
+                DIR_led <= "11111111";
+            when start => 
+                DIR_led <= "11111111";
+            when others =>
+                DIR_led <= "11111111";
+            when end_state =>
+                DIR_led <= "11111111";
+            when LineFollow1 =>
+                DIR_led <= "00111100";
+            when stupidstate1 => 
+                DIR_led <= "00111100";
+            when stupidstate2 => 
+                DIR_led <= "00111100";
+            when stupidstate3 => 
+                DIR_led <= "00111100";   
+            when stupidstate4 => 
+                DIR_led <= "00111100"; 
+            when ctrl_left =>
+                DIR_led <= "11100000";
+            when ctrl_right =>
+                DIR_led <= "00000111";  
+            when turn_around_1 =>
+                DIR_led <= "11000011";
+        end case;       
+
+
 
     process(clk,ctrl_state, lf_state, sensors_out, ctr_mine, ctr_data, reset, count_in)
     begin

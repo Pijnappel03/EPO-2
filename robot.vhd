@@ -20,7 +20,8 @@ entity robot is
 
         treasure_sw         : in std_logic;
 		  
-		  DEB_led : out std_logic_vector(6 downto 0)
+		  DEB_led : out std_logic_vector(6 downto 0);
+          DIR_led : out std_logic_vector(7 downto 0)
     );
 end entity robot;
 
@@ -48,7 +49,8 @@ architecture structural of robot is
             ctr_mid             : out std_logic;
 				
 				DEB_led : out std_logic_vector(4 downto 0);
-				  led_DEB :out std_logic_vector(1 downto 0)
+				  led_DEB :out std_logic_vector(1 downto 0);
+                  DIR_led :out std_logic_vector(7 downto 0)
     
       );
     end component controller;
@@ -203,13 +205,25 @@ begin
 										  DEB_led(3) => DEB_led(3),
 										  DEB_led(4) => DEB_led(4),
 										  led_DEB(0) => DEB_led(5),
-										  led_DEB(1) =>DEB_led(6)
+										  led_DEB(1) =>DEB_led(6),
+                                         
+                                          DIR_led(0) => DIR_led(0),
+                                          DIR_led(1) => DIR_led(1),
+                                          DIR_led(2) => DIR_led(2),
+                                          DIR_led(3) => DIR_led(3),
+                                          DIR_led(4) => DIR_led(4),
+                                          DIR_led(5) => DIR_led(5),
+                                          DIR_led(6) => DIR_led(6),
+                                          DIR_led(7) => DIR_led(7)
+
+
+
 										  
     );
 
     REG: eightbitregister port map(
                                 clk                 => clk,
-										  reset					 => reset,
+								reset					 => reset,
                                 register_input      => data_in,
 
                                 register_output     => data_out
