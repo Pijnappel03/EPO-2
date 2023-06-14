@@ -102,22 +102,31 @@ begin
 
         when tx_hold_mine =>
           DS_out_UART_in <= "00100000";
-			    DS_write <= '1';
-          tx_new <= tx_mine;
+			    --DS_write <= '1';
+             --tx_new <= tx_mine;
+			 
+			    if(buffer_empty = '1') then
+			      DS_write <= '1';
+					tx_new <= tx_mine;
+			      else
+			       DS_write <= '0';
+			       tx_new <= tx_hold_mine;
+			      end if;
 
         when tx_hold_cross =>
           DS_out_UART_in <= "01000000";
 			    if(buffer_empty = '1') then
-			    DS_write <= '1';
-             tx_new <= tx_cross;
+			      DS_write <= '1';
+            tx_new <= tx_cross;
 			    else
-			    DS_write <= '0';
-			    tx_new <= tx_hold_cross;
+			      DS_write <= '0';
+			      tx_new <= tx_hold_cross;
+            
 			    end if;
 
         when tx_mine =>
           DS_out_UART_in <= "00000101";
-          if (DS_in_mid = '0') then
+          if (DS_in_mine = '0') then
             DS_write <= '0';
             tx_new <= tx_idle;
           else
