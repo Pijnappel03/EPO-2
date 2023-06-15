@@ -4,7 +4,7 @@ library ieee;
 
 entity Mine_detector is
   generic (
-	trig_count : integer := 2700 -- (50*10^6/trig_freq)/2
+	trig_count : integer := 2560 -- (50*10^6/trig_freq)/2
 	);
   port (
     clk : in std_logic;

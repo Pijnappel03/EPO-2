@@ -15,8 +15,13 @@ entity robot is
         motor_r_pwm     : out std_logic;       
         
         mine_square_in  : in std_logic;
-        ro_rx              : out std_logic; 
-        ro_tx              : out std_logic
+        ro_rx              : in std_logic; 
+        ro_tx              : out std_logic;
+
+        treasure_sw         : in std_logic;
+		  
+		  DEB_led : out std_logic_vector(7 downto 0);
+          DIR_led : out std_logic_vector(7 downto 0)
     );
 end entity robot;
 
@@ -29,6 +34,11 @@ architecture structural of robot is
             count_in    	    : in std_logic_vector (19 downto 0);
             ctr_mine            : in std_logic;
             ctr_data            : in std_logic_vector (7 downto 0);
+
+            int_count_ctrl      : in std_logic_vector (31 downto 0);
+            int_reset_ctrl      : out std_logic;
+
+            treasure_sw         : in std_logic;
             
             count_reset         : out std_logic;
             direction_l	        : out std_logic;	
@@ -36,7 +46,10 @@ architecture structural of robot is
             direction_r         : out std_logic;
             direction_r_reset   : out std_logic;
             ctr_mine_out        : out std_logic;
-            ctr_mid             : out std_logic
+            ctr_mid             : out std_logic;
+				
+				DEB_led : out std_logic_vector(7 downto 0);
+                  DIR_led :out std_logic_vector(7 downto 0)
     
       );
     end component controller;
@@ -44,6 +57,7 @@ architecture structural of robot is
     component eightbitregister is
         port(             
             clk                     :in std_logic;  
+				reset							:in std_logic;
             register_input          :in std_logic_vector(7 downto 0);
     
             register_output         :out std_logic_vector(7 downto 0)
@@ -57,11 +71,11 @@ architecture structural of robot is
         -- tx
             DS_out_UART_in  : out std_logic_vector(7 downto 0);
             buffer_empty    : in std_logic;
-            write           : out std_logic;
+            DS_write           : out std_logic;
         -- rx
             DS_in_UART_out  : in std_logic_vector(7 downto 0);
             data_ready      : in std_logic;
-            read            : out std_logic;
+            DS_read            : out std_logic;
         -- user in
             DS_in_mine      : in std_logic;
             DS_in_mid       : in std_logic;
@@ -71,7 +85,7 @@ architecture structural of robot is
 
     component Mine_detector is
         generic (
-            trig_count      : integer := 2700 -- (50*10^6/trig_freq)/2
+            trig_count      : integer := 2560 -- (50*10^6/trig_freq)/2
             );
           port (
             clk             : in std_logic;
@@ -109,6 +123,13 @@ architecture structural of robot is
         );
     end component timebase;
 
+    component IntegerOfTime is
+        port (clk                   : in std_logic;
+              reset                 : in std_logic;
+              int_count_out         : out std_logic_vector(31 downto 0)
+        );
+        end component IntegerOfTime;
+
     component uart is
         port (
             clk             : in  std_logic;
@@ -129,18 +150,16 @@ architecture structural of robot is
 
     signal direction_ll, direction_l_resett, direction_rr, direction_r_resett       : std_logic;
     signal count                                                                    : std_logic_vector (19 downto 0);
-    signal reset_counter                                                            : std_logic;                         
+    signal int_count                                                                : std_logic_vector (31 downto 0);
+    signal reset_counter, Int_Count_reset                                           : std_logic;                         
     --Internal reset for counter and such
     signal sensors_out                                                              : std_logic_vector (2 downto 0);
     signal mine_detect_ctr, mine_detect_ds                                          : std_logic; 
     signal data_in, data_out                                                        : std_logic_vector (7 downto 0); 
     signal ds_in_mid_s, read_s, data_ready_s, buffer_empty_s, write_s               : std_logic;
-    signal ds_out_uart_in_s, DS_in_UART_out_s                                       : std_logic_vector (7 downto 0); 
-
- 
+    signal ds_out_uart_in_s, DS_in_UART_out_s                                       : std_logic_vector (7 downto 0);
 begin
     -- external signal handling
-        reset_counter <= reset;
 
     CRT: controller port map(
                                 sensors_out     	=> sensors_out,                           
@@ -150,17 +169,45 @@ begin
                                 ctr_mine            => mine_detect_ctr,
                                 ctr_data            => data_out,
 
+                                int_count_ctrl => int_count,
+                                int_reset_ctrl => Int_Count_reset,
+
+                                treasure_sw => treasure_sw,
+
                                 count_reset     	=> reset_counter,
                                 direction_l     	=> direction_ll,
                                 direction_l_reset   => direction_l_resett,
                                 direction_r     	=> direction_rr,
                                 direction_r_reset   => direction_r_resett,
                                 ctr_mine_out        => mine_detect_ds,
-                                ctr_mid             => ds_in_mid_s
+                                ctr_mid             => ds_in_mid_s,
+										  
+										DEB_led(0) => DEB_led(0),
+										DEB_led(1) => DEB_led(1),
+										DEB_led(2) => DEB_led(2),
+										DEB_led(3) => DEB_led(3),
+										DEB_led(4) => DEB_led(4),
+										DEB_led(5) => DEB_led(5),
+										DEB_led(6) => DEB_led(6),
+                                        DEB_led(7) => DEB_led(7),
+                                         
+                                          DIR_led(0) => DIR_led(0),
+                                          DIR_led(1) => DIR_led(1),
+                                          DIR_led(2) => DIR_led(2),
+                                          DIR_led(3) => DIR_led(3),
+                                          DIR_led(4) => DIR_led(4),
+                                          DIR_led(5) => DIR_led(5),
+                                          DIR_led(6) => DIR_led(6),
+                                          DIR_led(7) => DIR_led(7)
+
+
+
+										  
     );
 
     REG: eightbitregister port map(
                                 clk                 => clk,
+								reset					 => reset,
                                 register_input      => data_in,
 
                                 register_output     => data_out
@@ -168,28 +215,30 @@ begin
 
     DS: data_sender port map(      
                                 clk                 => clk,
-                                reset               => reset_counter,
+                                reset               => reset,
                             -- tx          =>
                                 DS_out_UART_in      =>  ds_out_uart_in_s,
                                 buffer_empty        =>  buffer_empty_s,
-                                write               =>  write_s,
+                                DS_write               =>  write_s,
                             -- rx      =>
                                 DS_in_UART_out      =>  DS_in_UART_out_s,   
                                 data_ready          =>  data_ready_s,
-                                read                =>  read_s,
+                                DS_read                =>  read_s,
                             -- user in     =>
                                 DS_in_mine          =>  mine_detect_ds,
                                 DS_in_mid           =>  ds_in_mid_s,
                                 DS_out              =>  data_in
+                            
     );    
 
     MD: Mine_detector port map (
-                                clk                =>  clk,
-                                square_in          =>  mine_square_in,
-                                sensors_out        =>  sensors_out,
+                                clk                => clk,
+                                square_in          => mine_square_in,
+                                sensors_out        => sensors_out,
 
-                                mine_out           =>  mine_detect_ctr
+                                mine_out           => mine_detect_ctr
     );
+
 
     MCL: motorcontrol port map(
                                 reset               => direction_l_resett,
@@ -223,9 +272,15 @@ begin
                                 count_out           => count
     );
 
+    ITB: IntegerOfTime port map (
+                  clk                   => clk,
+                  reset                 => Int_Count_reset,
+                  int_count_out         => int_count
+    );
+
     ua : UART port map(
                                 clk                 => clk,
-                                reset               => reset_counter,
+                                reset               => reset,
 
                                 rx                  =>  ro_rx,
                                 tx                  =>  ro_tx,

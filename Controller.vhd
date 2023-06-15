@@ -2,7 +2,7 @@ library IEEE;
 USE IEEE.std_logic_1164.ALL;
 use IEEE.numeric_std.all;
 
-entity controller is
+entity old_ctrl is
   port (
         sensors_out	        : in std_logic_vector (2 downto 0); 
 	    clk	                : in std_logic;
@@ -20,10 +20,10 @@ entity controller is
         ctr_mid             : out std_logic
 
   );
-end controller;
+end old_ctrl;
 
-architecture behavioral of controller is
-    type control_state is (start_midpoint, forward, crosspoint, s_left, s_right, reverse);
+architecture behavioral of old_ctrl is
+    type control_state is (start_midpoint, forward, crosspoint, s_left, s_right, reverse, stop);
     signal state, new_state                                                                     : control_state;
     signal count_r, direction_ll, direction_rr, direction_l_resett, direction_r_resett          : std_logic;
     signal count_point                                                                          : integer; -- Count signal
@@ -43,7 +43,7 @@ begin
     begin
         if (rising_edge (clk)) then
             if (reset = '1') then
-                state <= start_midpoint;
+                state <= stop;
                 count_point <= 1; 
             else
                 state <= new_state;
@@ -54,6 +54,18 @@ begin
     process (state, count_in, sensors_out)
     begin
         case state is
+
+            when stop => 
+                count_r <= '0';
+                direction_l_resett <= '1';
+                direction_r_resett <= '1';
+                direction_ll   <= '0';
+                direction_rr   <= '0';
+                mid_s <= '0';
+                mine_s <= '0';
+                if (sensors_out="000") then
+                    new_state <= start_midpoint;
+                end if;
 
             when start_midpoint => 
                 count_r       <= '0'; 
@@ -104,7 +116,8 @@ begin
                     new_state <= s_right;
             elsif (ctr_data = "01000000") then
                     new_state <= s_left;
-            elsif (ctr_data = "00000000") then 
+            elsif (ctr_data = "00000000") then
+                    new_state <= stop;  
             end if;
 
             when s_left =>

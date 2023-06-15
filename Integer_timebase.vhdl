@@ -4,15 +4,15 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 
-entity timebase is
+entity IntegerOfTime is
 port (clk: in std_logic;
 reset: in std_logic;
-count_out: out std_logic_vector(19 downto 0)
+int_count_out: out std_logic_vector(31 downto 0)
 );
-end entity timebase;
+end entity IntegerOfTime;
 
-architecture behavioural of timebase is
-signal count, new_count: unsigned (19 downto 0);
+architecture behavioural of IntegerOfTime is
+signal count, new_count: unsigned (31 downto 0);
 begin
 process ( clk )
 begin
@@ -31,7 +31,7 @@ begin
 new_count <= count + 1;
 end process;
 
-count_out <= std_logic_vector ( count );
+int_count_out <= std_logic_vector ( count );
 
 end architecture behavioural;
 

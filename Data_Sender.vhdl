@@ -30,11 +30,11 @@ entity Data_Sender is
     -- tx
         DS_out_UART_in : out std_logic_vector(7 downto 0);
         buffer_empty : in std_logic;
-        write : out std_logic;
+        DS_write : out std_logic;
     -- rx
         DS_in_UART_out : in std_logic_vector(7 downto 0);
         data_ready : in std_logic;
-        read : out std_logic;
+        DS_read : out std_logic;
     -- user in
         DS_in_mine : in std_logic;
         DS_in_mid : in std_logic;
@@ -55,158 +55,131 @@ architecture behavioral of Data_Sender is
     tx_idle,
     tx_hold_mine,
     tx_hold_cross,
-    tx_hold_ack,
     tx_mine,
-    tx_cross,
-    tx_ack,
-    tx_wait_ack_mine,
-    tx_wait_ack_cross
+    tx_cross
   );
 
   type reciever_state is (
+    rx_reset,
     rx_idle,
-    rx_read,
     rx_toBuff
   );
 
-  signal ack_send : std_logic;
-  signal ack_rec : std_logic;
   signal tx_state, tx_new : transmitter_state;
   signal rx_state, rx_new : reciever_state;
-  signal count_ack : unsigned(12 downto 0); 
   signal data : std_logic_vector(7 downto 0);
 begin
 
   -- assign states (clk process)
   process(clk)
   begin
+    
     if(rising_edge(clk)) then
-      tx_state <= tx_new;
-      rx_state <= rx_new;
+      if (reset = '1')  then
+        tx_state <= tx_idle;
+        rx_state <= rx_reset;
+      else
+        tx_state <= tx_new;
+        rx_state <= rx_new;
+      end if;
     end if;
   end process;
 
   -- tx state comb
-  process(tx_state, DS_in_mid, DS_in_mine, ack_send, reset)
+  process(tx_state, DS_in_mid, DS_in_mine, reset, buffer_empty)
   begin
-    if (reset = '1') then
-      tx_new <= tx_idle;
-    else 
       case tx_state is
         when tx_idle =>
-          if(rising_edge(DS_in_mid)) then
+			    DS_write <= '0';
+          DS_out_UART_in <= "00000001";
+          if(DS_in_mid = '1') then
             tx_new <= tx_hold_cross;
-          elsif(rising_edge(DS_in_mine)) then
+          elsif(DS_in_mine = '1') then
             tx_new <= tx_hold_mine;     
-          elsif(ack_send = '1') then
-            tx_new <= tx_hold_ack;
           else
             tx_new <= tx_idle;
           end if;
 
         when tx_hold_mine =>
-          if(buffer_empty = '0') then
-            tx_new <= tx_mine;
-          else
-            tx_new <= tx_hold_mine;
-          end if;
+          DS_out_UART_in <= "00100000";
+			    --DS_write <= '1';
+             --tx_new <= tx_mine;
+			 
+			    if(buffer_empty = '1') then
+			      DS_write <= '1';
+					tx_new <= tx_mine;
+			      else
+			       DS_write <= '0';
+			       tx_new <= tx_hold_mine;
+			      end if;
 
         when tx_hold_cross =>
-          if(buffer_empty = '0') then
+          DS_out_UART_in <= "01000000";
+			    if(buffer_empty = '1') then
+			      DS_write <= '1';
             tx_new <= tx_cross;
-          else
-            tx_new <= tx_hold_cross;
-          end if;
-
-        when tx_hold_ack =>
-          if(buffer_empty = '0') then
-            tx_new <= tx_ack;
-          else
-            tx_new <= tx_hold_ack;
-          end if;
+			    else
+			      DS_write <= '0';
+			      tx_new <= tx_hold_cross;
+            
+			    end if;
 
         when tx_mine =>
-          DS_out_UART_in <= "01000000";
-          write <= '1';
-          tx_new <= tx_wait_ack_mine;
+          DS_out_UART_in <= "00000101";
+          if (DS_in_mine = '0') then
+            DS_write <= '0';
+            tx_new <= tx_idle;
+          else
+            DS_write <= '0';
+			      tx_new <= tx_mine;
+          end if;
 
         when tx_cross =>
-          DS_out_UART_in <= "10000000";
-          write <= '1';
-          tx_new <= tx_wait_ack_cross;
-
-        when tx_ack =>
-          DS_out_UART_in <= "00010000";
-          write <= '1';
-          tx_new <= tx_idle;
-          ack_send <= '0';
-
-        when tx_wait_ack_mine =>
-          write <= '0';
-          if(count_ack = 4000)then
-            tx_new <= tx_wait_ack_mine;
-            count_ack <= count_ack + 1;
-          elsif (count_ack = 4000) then
-            tx_new <= tx_hold_mine;
+		      DS_out_UART_in <= "00000111";
+          if (DS_in_mid = '0') then
+            DS_write <= '0';
+            tx_new <= tx_idle;
           else
-            count_ack <= "0";
-            tx_new <= tx_wait_ack_mine;
+            DS_write <= '0';
+			      tx_new <= tx_cross;
           end if;
-
-        when tx_wait_ack_cross =>
-          write <= '0';
-          if(count_ack = 4000)then
-            if(ack_rec = '1') then
-              count_ack <= "0";
-              ack_rec <= '0';
-              tx_new <= tx_idle;
-            else
-              tx_new <= tx_wait_ack_cross;
-              count_ack <= count_ack + 1;
-            end if;
-          elsif (count_ack = 4000) then
-            tx_new <= tx_hold_cross;
-          else
-            count_ack <= "0";
-            tx_new <= tx_wait_ack_cross;
-          end if;
-
+			
           when others =>
+			      DS_out_UART_in <= "01010101";
+			      DS_write <= '0';
             tx_new <= tx_idle;
 
       end case;
-    end if;
 
   end process;
 
   -- RX combinatorial
 
-  process(rx_state, data_ready)
+  process(rx_state, data_ready, reset, DS_in_UART_out)
   begin
-    if (reset = '1') then
-      rx_new <= rx_idle;
-    else 
-      case rx_state is
-        when rx_idle =>
-          if (data_ready = '1') then
-            rx_new <= rx_read;
-          else 
-            rx_new <= rx_idle;
-          end if;
-          read <= '0';
-        when rx_read =>
-          if (DS_in_UART_out = "00010000") then
-            ack_rec <= '1';
-            read <= '1';
-            rx_new <= rx_idle;
-          else
-            rx_new <= rx_toBuff;
-          end if;
-        when rx_toBuff =>
-          data <= DS_in_UART_out;
-          read <= '1';
-      end case;
-    end if;
+    case rx_state is
+      when rx_reset =>
+        DS_read <= '0';
+
+        if (reset = '1') then
+          rx_new <= rx_reset;
+        else 
+          rx_new <= rx_idle;
+        end if;          
+      when rx_idle =>
+        if (data_ready = '1') then
+          rx_new <= rx_toBuff;
+        else 
+          rx_new <= rx_idle;
+        end if;
+        DS_read <= '0';
+			  data <= data;
+			
+      when rx_toBuff =>
+        data <= DS_in_UART_out;
+			  rx_new <= rx_idle;
+        DS_read <= '1';
+    end case;
   end process;
 
   REG: out_buff port map(regin => data, regout => DS_out);
